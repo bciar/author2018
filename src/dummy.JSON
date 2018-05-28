@@ -1,0 +1,61 @@
+{
+    "biological_entity": [
+        {
+            "character": [
+                {
+                    "src": "d0_s0",
+                    "name": "coloration",
+                    "ontologyid": "http://purl.obolibrary.org/obo/PATO_0000322[red:color/red:1.0];",
+                    "is_modifier": false,
+                    "value": "red"
+                },
+                {
+                    "src": "d0_s0",
+                    "name": "shape",
+                    "is_modifier": false,
+                    "value": "rounded"
+                },
+                {
+                    "unit": "cm",
+                    "src": "d0_s0",
+                    "name": "length",
+                    "value": 3.5
+                },
+                {
+                    "unit": "cm",
+                    "src": "d0_s0",
+                    "name": "length",
+                    "value": 3
+                },
+                {
+                    "unit": "cm",
+                    "src": "d0_s0",
+                    "name": "width",
+                    "value": 4
+                }
+            ],
+            "src": "d0_s0",
+            "name": "blade",
+            "name_original": "blades",
+            "ontologyid": "http://purl.obolibrary.org/obo/PO_0025060[blade:cardinal part of multi-tissue plant structure/laminablade:1.0];",
+            "id": "o0",
+            "type": "structure"
+        },
+        {
+            "src": "d0_s0",
+            "name": "leaf",
+            "name_original": "leaves",
+            "ontologyid": "http://purl.obolibrary.org/obo/PO_0025034[leaf:phyllome/leaf:1.0];",
+            "id": "o1",
+            "type": "structure"
+        }
+    ],
+    "relation": {
+        "negation": false,
+        "src": "d0_s0",
+        "name": "part_of",
+        "from": "o0",
+        "id": "r0",
+        "to": "o1"
+    }
+}

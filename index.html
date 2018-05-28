@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <title>vue_organism</title>
+    <!-- Vue -->
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <!-- Firebase -->
+    <script src="https://gstatic.com/firebasejs/4.0.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/2.6.2/firebaseui.js"></script>
+    <!-- VueFire -->
+    <script src="https://unpkg.com/vuefire/dist/vuefire.js"></script>
+</head>
+<style>
+#color-picker li{
+    float: left;
+    width: 20px;
+    height: 20px;
+    margin: 1px;
+}
+#logout{
+    float: right;
+    position: relative;
+    background-color: black;
+    color: white;
+    width: 90px;
+}
+#theTitle{
+    background-color: white;
+}
+</style>
+<body>
+      <button id="logout">Logout</button>
+      <div id="particles-js"></div>
+      <h1 id="theTitle" style="color: black; text-align: center; ">Vue Organism</h1>
+      <div id="app"></div>
+      <!-- built files will be auto injected -->
+</body>
+</html>
