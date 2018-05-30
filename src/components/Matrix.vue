@@ -41,9 +41,9 @@
 </template>
 
 <script>
-  import jQuery from 'jquery/dist/jquery.js'
-  import $ from 'jquery/dist/jquery.js'
-  import modal from 'bootstrap/dist/css/bootstrap.css'
+  // import jQuery from 'jquery/dist/jquery.js'
+  // import $ from 'jquery/dist/jquery.js'
+  // import modal from 'bootstrap/dist/css/bootstrap.css'
   import json from '../dummy.json'
 
   export default {

@@ -2,18 +2,20 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import App from './App'
-import TextEditor from './components/TextEditor'
-import Matrix from './components/Matrix'
+
 import * as firebase from 'firebase'
 import router from './router'
-import 'bootstrap/dist/css/bootstrap.css'
-import jQuery from 'jquery/dist/jquery.js'
 
 import {store} from './components/store/store.js';
 
+import Vuetify from 'vuetify'
+import 'vuetify/dist/vuetify.min.css'
+//import 'material-design-icons-iconfont/dist/material-design-icons.css'
+
+Vue.use(Vuetify)
+Vue.use(VueFire);
 
 Vue.config.productionTip = false
-Vue.use(VueFire);
 
 /* eslint-disable no-new */
 new Vue({
