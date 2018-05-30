@@ -7,7 +7,17 @@
     </v-layout>
     <v-layout fluid fill-height >
       <v-flex xs5 fill-height >
-        <rich-text v-model="msg" :editorToolbar="customToolbar" style="height:calc(100% - 112px)"></rich-text>
+        <v-layout row>
+          <v-alert :value="true" outline  type="success" style="height:42px; width:100%">
+            Edit a template to produce new description
+          </v-alert>
+            <v-btn color="gray">Matricize</v-btn>
+        </v-layout>
+        <v-layout xs12 fill-height>
+          <v-flex xs12>
+            <rich-text v-model="msg" :editorToolbar="customToolbar" style="height:calc(100% - 112px)"></rich-text>
+          </v-flex>
+        </v-layout>
       </v-flex>
       <v-flex xs7 fill-height>
         <table-view></table-view>

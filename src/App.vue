@@ -1,10 +1,10 @@
 <template>
     <!-- if the user is not logged in then display this -->
     <v-app id="inspire">
-      <v-toolbar v-if="$store.state.logged_in" color="blue-grey" dark fixed app clipped-right>
+      <v-toolbar v-if="$store.state.logged_in" color="indigo" dark fixed app clipped-right>
         <v-toolbar-title>Vue Organism</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="gray" v-on:click="onSignOut">SignOut</v-btn>
+        <v-btn color="blue" v-on:click="onSignOut">SignOut</v-btn>
       </v-toolbar>
       <v-content v-if="!$store.state.logged_in">
         <v-container fluid fill-height>

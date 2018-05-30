@@ -1,11 +1,11 @@
 <template>
     <div>
-      <v-tabs color="cyan" dark slider-color="yellow">
-        <v-tab v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)">
+      <v-tabs color="blue" dark slider-color="yellow">
+        <v-tab color="black" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)">
           {{tab}}
         </v-tab>
         <v-spacer></v-spacer>
-        <v-btn color="info" v-on:click="editTab(-1)">New Tab</v-btn>
+        <v-btn color="indigo" v-on:click="editTab(-1)">New Tab</v-btn>
       </v-tabs>
       
       <v-dialog v-model="editDlg" max-width="500px">
