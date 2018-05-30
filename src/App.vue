@@ -2,9 +2,9 @@
     <!-- if the user is not logged in then display this -->
     <v-app id="inspire">
       <v-toolbar v-if="$store.state.logged_in" color="blue-grey" dark fixed app clipped-right>
-        <v-toolbar-title>Toolbar</v-toolbar-title>
+        <v-toolbar-title>Vue Organism</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="primary" v-on:click="onSignOut">SignOut</v-btn>
+        <v-btn color="gray" v-on:click="onSignOut">SignOut</v-btn>
       </v-toolbar>
       <v-content v-if="!$store.state.logged_in">
         <v-container fluid fill-height>
@@ -32,40 +32,13 @@
         </v-container>
       </v-content>
       <v-content v-else>
-        <v-container fluid fill-height>
-          <router-view xs12 transition="slide-y-reverse-transition"></router-view>
-        </v-container>
+        <Main></Main>
       </v-content>
-              <!--  
-                    <div class="body"></div>
-                    <div class="grad"></div>
-                    <div class="header">
-                        <div>Vue<span>Organism</span></div>
-                    </div>
-                    <br>
-                    <div class="login">
-                        <input id="txtEmail" type="text" placeholder="username" name="user"><br>
-                        <input  id="txtPassword" type="password" placeholder="password" name="password"><br>
-                        <input type="button" value="Login"  @click="login()">
-                        <input type="button" value="Signup"  @click="signup()">
-                    </div>
-                -->
-          
-
-        <!-- If the user is logged in -->
-<!--        <div id="content" v-if="$store.state.logged_in" style="background-color: black; border-style: solid;  height: 70vh;">
-            <div id='text_editor' style="width: 710px; margin-left: 500px; margin-right: auto; width: 30%; ">
-                <TextEditor ></TextEditor>
-            </div>
-            <div id='matrix_element' style="">
-                <Matrix></Matrix>
-            </div>
-            <div class="vr"></div>
-        </div>-->
     </v-app>
 </template>
 
 <script>
+import Main from '@/components/Main'
 import firebase from 'firebase'
 
 export default {
@@ -83,6 +56,7 @@ export default {
   props: {
     source: String
   },
+  components: {Main},  
   methods: {
     onSignOut() {
       this.$store.state.logged_in = false;

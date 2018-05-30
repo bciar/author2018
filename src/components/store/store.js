@@ -8,7 +8,7 @@ export const store = new Vuex.Store({
 		counter: 0,
 		logged_in: false,
 		auth_id: -1,
-		tab_list: []
-
+		tab_list: ["species1","species2","species3"],
+		item_list: []
 	}
 });
