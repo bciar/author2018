@@ -24,7 +24,7 @@
                 <v-card-actions>
                   <v-spacer></v-spacer>
                   <v-btn color="primary" v-on:click="onLogin">SignIn</v-btn>
-                  <v-btn color="primary" v-on:click="onLogin">SignUp</v-btn>
+                  <v-btn color="primary" v-on:click="onSignUp">SignUp</v-btn>
                 </v-card-actions>
               </v-card>
             </v-flex>
@@ -123,39 +123,30 @@ export default {
         });
     //   this.load();
      },
-    // signup(){
-    //     const email = txtEmail.value.toString();
-    //     console.log("email = " + email);
-    //     const pass = txtPassword.value.toString();
-    //     console.log("pass = " + pass);
-    //     const auth = firebase.auth();
-    //     var val = 0;
-    //     const promise = firebase.auth().createUserWithEmailAndPassword(email, pass).then(
-    //         user => {
-    //           const newUser = {
-    //             id: user.uid,
-    //             registerMeetUps: []
-    //           }
-    //           this.logged_in = true;
-    //           this.sign_in = false;
-    //         },
-    //       )
-    //     .catch(
-    //       error => {
-    //         console.log("error");
-    //         $("#txtResult").empty();
-    //         $("#txtResult").append("Error Signing up");
-    //         val = 1;
-    //         return;
-    //       });
-
-    // },
+    onSignUp(){
+      const auth = firebase.auth();
+      const promise = firebase.auth().createUserWithEmailAndPassword(this.email, this.password).then(
+          user => {
+            const newUser = {
+              id: user.uid,
+              registerMeetUps: []
+            }
+            this.logged_in = true;
+          },
+        )
+      .catch(
+        error => {
+          console.log("error");
+          alert("SignUp error");
+          return;
+        });
+     },
     // load(){
     // }
   },
-  // mounted(){
-  //     // console.log("this = " + this.auth_id);
-  //     // this.$store.state.auth_id = this.auth_id;
-  // }
+  mounted(){
+    console.log("this = " + this.auth_id);
+    this.$store.state.auth_id = this.auth_id;
+  }
 }
 </script>
