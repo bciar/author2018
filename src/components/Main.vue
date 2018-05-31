@@ -2,7 +2,7 @@
   <div style="height:100%">
     <v-layout row>
       <v-flex xs12>
-        <taxon-tab></taxon-tab>
+        <taxon-tab ref="tab"></taxon-tab>
       </v-flex>
     </v-layout>
     <v-layout fluid fill-height >
@@ -12,10 +12,13 @@
             Edit a template to produce new description
           </v-alert>
             <v-btn color="gray">Matricize</v-btn>
+            <v-btn color="white">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
-            <rich-text v-model="msg" :editorToolbar="customToolbar" style="height:calc(100% - 112px)"></rich-text>
+            <div v-on:click.stop="select_word()" v-on:dblclick="select_word()">
+            <rich-text v-model="editContent" :editorToolbar="customToolbar" style="height:calc(100% - 112px)"></rich-text>
+            </div>
           </v-flex>
         </v-layout>
       </v-flex>
@@ -35,10 +38,15 @@ export default {
   name: 'Main',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App',
       customToolbar: [
-            ['bold', 'italic', 'underline']
+            ['bold', 'italic', 'underline',{'color':[]}]
           ]
+    }
+  },
+  computed: {
+    editContent: function () {
+      //console.log(this.$refs);
+      //return this.$store.text_datas[this.$refs.tab.active];
     }
   },
   components: { 
@@ -47,7 +55,17 @@ export default {
     "rich-text" :VueEditor
     },
   methods: {
+    select_word () {
+      console.log(window.getSelection().toString());
+      var dt = window.getSelection();
+      console.log(dt);
+      //dt.$emit("bold");
+      //var parentND = dt.p
+      //dt.nodeValue = "1111111111";
+      dt.anchorNode.textContent = "11111111";
+      //dt.anchorNode.cloneNode();
 
+    }
   }
 }
 

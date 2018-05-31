@@ -5,6 +5,8 @@
         <v-toolbar-title>Vue Organism</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn color="blue" v-on:click="onSignOut">SignOut</v-btn>
+        <v-btn color="blue">Export as *.doc</v-btn>
+        <v-btn color="blue">Export as *.xlsx</v-btn>
       </v-toolbar>
       <v-content v-if="!$store.state.logged_in">
         <v-container fluid fill-height>

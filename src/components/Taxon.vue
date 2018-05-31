@@ -1,6 +1,6 @@
 <template>
     <div>
-      <v-tabs color="blue" dark slider-color="yellow">
+      <v-tabs v-model="active" color="blue" dark slider-color="yellow">
         <v-tab color="black" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)">
           {{tab}}
         </v-tab>
@@ -32,6 +32,7 @@ export default {
     name: 'Taxon',
     data () {
         return {
+            active: null,
             editDlg: false,
             newDlg: false,
             modalName: '',
