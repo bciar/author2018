@@ -67,38 +67,30 @@ export default {
         router.push({path: '/login'})
       })
     },
-    // submitName(){
-    //   nodesRef.push({name: this.name})
-    // },
-     onLogin() {
-        console.log(this.$store.state.counter);
-        console.log(this.email);
-        console.log(this.password);
-
-        const auth = firebase.auth();
-        const promise = firebase.auth().signInWithEmailAndPassword(this.email, this.password).then(
-            user => {
-              this.$store.state.logged_in = true;
-              this.auth_id = user.uid;
-            },
-          )
-        .catch(
-          error => {
-            console.log("error");
-            alert("Error Login");
-            return;
-          });
-
-        firebase.auth().onAuthStateChanged((user) => {
-          if (user) {
-              this.auth_id = user.uid;
-              this.$store.state.auth_id = user.uid;
-              console.log("this1 = " +  this.$store.state.auth_id);
-              //TextEditor.data.authID = 'f';
-          }
+    onLogin() {
+      const auth = firebase.auth();
+      const promise = firebase.auth().signInWithEmailAndPassword(this.email, this.password).then(
+          user => {
+            this.$store.state.logged_in = true;
+            this.auth_id = user.uid;
+          },
+        )
+      .catch(
+        error => {
+          console.log("error");
+          alert("Error Login");
+          return;
         });
-    //   this.load();
-     },
+
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            this.auth_id = user.uid;
+            this.$store.state.auth_id = user.uid;
+            console.log("this1 = " +  this.$store.state.auth_id);
+            //TextEditor.data.authID = 'f';
+        }
+      });
+    },
     onSignUp(){
       const auth = firebase.auth();
       const promise = firebase.auth().createUserWithEmailAndPassword(this.email, this.password).then(
@@ -116,12 +108,9 @@ export default {
           alert("SignUp error");
           return;
         });
-     },
-    // load(){
-    // }
+     }
   },
   mounted(){
-    console.log("this = " + this.auth_id);
     this.$store.state.auth_id = this.auth_id;
   }
 }

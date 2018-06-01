@@ -64,7 +64,6 @@ export default {
                 this.$store.state.tab_list[this.current_index] = this.new_name;
             }
             this.editDlg = false;
-
         }
     }
 }

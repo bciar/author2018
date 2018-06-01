@@ -11,7 +11,7 @@
           <v-alert :value="true" outline  type="success" style="height:42px; width:100%">
             Edit a template to produce new description
           </v-alert>
-            <v-btn color="gray">Matricize</v-btn>
+            <v-btn v-on:click="matricize()" color="gray">Matricize</v-btn>
             <v-btn color="white">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
@@ -56,15 +56,20 @@ export default {
     },
   methods: {
     select_word () {
-      console.log(window.getSelection().toString());
       var dt = window.getSelection();
-      console.log(dt);
+      var selected_txt = dt.toString();
       //dt.$emit("bold");
       //var parentND = dt.p
       //dt.nodeValue = "1111111111";
-      dt.anchorNode.textContent = "11111111";
+      //dt.anchorNode.textContent = "11111111";
       //dt.anchorNode.cloneNode();
-
+      if(selected_txt != "")
+      {
+        console.log(dt);
+      }
+    },
+    matricize () {
+      
     }
   }
 }

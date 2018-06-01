@@ -19,10 +19,12 @@ export default new Router({
 })
 
 router.beforeEach((to, from, next) => {
+  
   // Check for requiresAuth guard
   let user = firebase.auth().currentUser
   console.log(user)
   if (to.matched.some(record => record.meta.requiresAuth)) {
+
     // Check if NO logged user
     if (!user) {
       console.log('no-currentUser')
