@@ -1,0 +1,64 @@
+{
+    "statements": [
+        {
+            "id": "d1_s0",
+            "notes": null,
+            "provenance": null,
+            "text": " Petals mostly 5, deciduous.",
+            "biologicalEntities": [
+                {
+                    "alterName": null,
+                    "characters": [
+                        {
+                            "charType": null,
+                            "constraint": null,
+                            "constraintId": null,
+                            "establishedMeans": null,
+                            "from": null,
+                            "fromInclusive": null,
+                            "fromModifier": null,
+                            "geographicalConstraint": null,
+                            "inBrackets": null,
+                            "isModifier": null,
+                            "modifier": "mostly",
+                            "name": "count",
+                            "notes": null,
+                            "ontologyId": null,
+                            "organConstraint": null,
+                            "otherConstraint": null,
+                            "parallelismConstraint": null,
+                            "provenance": null,
+                            "taxonConstraint": null,
+                            "to": null,
+                            "toInclusive": null,
+                            "toModifier": null,
+                            "toUnit": null,
+                            "type": null,
+                            "src": "d1_s0",
+                            "unit": null,
+                            "upperRestricted": null,
+                            "value": "5"
+                        }
+                    ],
+                    "constraint": null,
+                    "constraintId": null,
+                    "constraintOriginal": null,
+                    "geographicalConstraint": null,
+                    "id": "o1660",
+                    "inBrackets": null,
+                    "name": "petal",
+                    "nameOriginal": "petals",
+                    "notes": null,
+                    "ontologyId": "d0_s8",
+                    "paralellismConstraint": null,
+                    "provenance": null,
+                    "src": "d0_s8",
+                    "taxonConstraint": null,
+                    "type": "structure"
+                }
+            ],
+            "relations": []
+        }
+    ],
+    "text": null
+}

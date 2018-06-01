@@ -1,13 +1,12 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="desserts"
+    :items="$store.state.item_list"
     hide-actions
     class="elevation-1"
   >
     <template slot="items" slot-scope="props">
-      <td>{{ props.item.name }}</td>
-      <td v-for="(key, value) in headers" :key="key" class="text-xs-right">{{ value }}</td>
+      <td v-for="(key) in headers" :key="key.value" class="text-xs-left">{{ props.item[key.value] }}</td>
     </template>
     <template slot="no-data">
       <v-alert :value="true" color="error" icon="warning">
@@ -29,7 +28,7 @@ export default {
     },
     computed: {
         headers: function() {
-            var header = [{text:"Organism",value:"name"}];
+            var header = [{text:"Name",value:"name"}];
             this.$store.state.tab_list.forEach(val => {
                 var data = {
                     text: val,

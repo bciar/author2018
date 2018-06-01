@@ -1,7 +1,7 @@
 <template>
     <div>
       <v-tabs v-model="active" color="blue" dark slider-color="yellow">
-        <v-tab color="black" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)">
+        <v-tab color="black" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)" v-on:click="changeTab(key)">
           {{tab}}
         </v-tab>
         <v-spacer></v-spacer>
@@ -59,11 +59,15 @@ export default {
         saveName () {
             if (this.current_index == -1) {
                 this.$store.state.tab_list.push(this.new_name);
+                this.$store.state.text_array.push("");
 
             } else {
                 this.$store.state.tab_list[this.current_index] = this.new_name;
             }
             this.editDlg = false;
+        },
+        changeTab (index) {
+            this.$store.state.active_tab = index;
         }
     }
 }

@@ -2,7 +2,7 @@
   <div style="height:100%">
     <v-layout row>
       <v-flex xs12>
-        <taxon-tab ref="tab"></taxon-tab>
+        <taxon-tab ref="taxon_tab"></taxon-tab>
       </v-flex>
     </v-layout>
     <v-layout fluid fill-height >
@@ -16,8 +16,8 @@
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
-            <div v-on:click.stop="select_word()" v-on:dblclick="select_word()">
-            <rich-text v-model="editContent" :editorToolbar="customToolbar" style="height:calc(100% - 112px)"></rich-text>
+            <div v-on:click.stop="select_word()" v-on:dblclick="select_word()" style="height:calc(100% - 200px)">
+              <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit"></rich-text>
             </div>
           </v-flex>
         </v-layout>
@@ -34,19 +34,16 @@ import Taxon from '@/components/Taxon'
 import DataTable from '@/components/DataTable'
 import { VueEditor } from 'vue2-editor'
 
+import json from '@/json/responseJSON.json'
+
 export default {
   name: 'Main',
   data () {
     return {
       customToolbar: [
-            ['bold', 'italic', 'underline',{'color':[]}]
-          ]
-    }
-  },
-  computed: {
-    editContent: function () {
-      //console.log(this.$refs);
-      //return this.$store.text_datas[this.$refs.tab.active];
+        //['bold', 'italic', 'underline',{'color':[]}]
+      ],
+      editContent: ""
     }
   },
   components: { 
@@ -56,6 +53,7 @@ export default {
     },
   methods: {
     select_word () {
+      /*
       var dt = window.getSelection();
       var selected_txt = dt.toString();
       //dt.$emit("bold");
@@ -65,11 +63,44 @@ export default {
       //dt.anchorNode.cloneNode();
       if(selected_txt != "")
       {
-        console.log(dt);
+        var editor = this.$refs.rich_edit;
+        console.log(editor.quill);
+        //editor.insertEmbed(0, 'image', "/src/assets/logo.png");
+        var range = editor.quill.getSelection();
+        if(range){
+
+            editor.quill.formatText(range,'bold',true);
+        }
+        editor.quill.insertEmbed(range.index, 'image', "http://localhost:8081/assets/logo.png");
       }
+      */
     },
     matricize () {
+      var fetch_result;
+
+      // there should fetch function; result will be retrieved to fetch result
       
+      fetch_result = json;    // save simulated data
+
+      /////////////////////////////////////////////////////////////////////////
+
+      console.log(fetch_result);
+      const records = this.$store.state.item_list;
+      fetch_result.statements.forEach(val => {
+        val.biologicalEntities.forEach(bioVal => {
+          var item = {
+            name: bioVal.name
+          };
+          // check if item exist in table
+          if(!this.$store.state.item_index_list.hasOwnProperty(item.name)){
+            this.$store.state.item_index_list[item.name] = item.name;
+            this.$store.state.item_list.push(item);
+          }
+        });
+      });
+
+      ////////////////////////////////////////////////////////////////////////
+
     }
   }
 }
