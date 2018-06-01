@@ -43,8 +43,26 @@ export default {
       customToolbar: [
         //['bold', 'italic', 'underline',{'color':[]}]
       ],
-      editContent: ""
+      editContent: "",
+      editor: null
     }
+  },
+  mounted: function() {
+    this.editor = this.$refs.rich_edit.quill;
+    const cnt_editor = this.editor
+    this.editor.on('selection-change', function(range, oldRange, source) {
+      if (range) {
+        console.log(source);
+        if (range.length == 0) {
+          console.log('User cursor is on', range.index);
+        } else {
+          var text = cnt_editor.getText(range.index, range.length);
+          console.log('User has highlighted', text);
+        }
+      } else {
+        console.log('Cursor not in the editor');
+      }
+    });
   },
   components: { 
     "taxon-tab" : Taxon,
@@ -53,6 +71,8 @@ export default {
     },
   methods: {
     select_word () {
+      console.log(window.getSelection());
+      //console.log(this.editor.getSelection());
       /*
       var dt = window.getSelection();
       var selected_txt = dt.toString();
@@ -76,6 +96,7 @@ export default {
       */
     },
     matricize () {
+
       var fetch_result;
 
       // there should fetch function; result will be retrieved to fetch result
@@ -93,11 +114,21 @@ export default {
           };
           // check if item exist in table
           if(!this.$store.state.item_index_list.hasOwnProperty(item.name)){
-            this.$store.state.item_index_list[item.name] = item.name;
-            this.$store.state.item_list.push(item);
+            this.$store.state.item_index_list[item.name] = item.name;             // save item for index key for future search
+            this.$store.state.item_list.push(item);                               // add item record ; this will display item in table view
           }
         });
       });
+
+
+      //-----------------  item bold ----------------------
+
+      const textContent = this.editor.getText().toLowerCase();
+      // bold each items in editor
+      for(var key in this.$store.state.item_index_list) {
+        var index = textContent.search(key);
+        this.editor.formatText(index, key.length, "bold", true);
+      }
 
       ////////////////////////////////////////////////////////////////////////
 
