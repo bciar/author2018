@@ -25,6 +25,8 @@ export const store = new Vuex.Store({
 
 		active_tab: 0,												// index of active tab
 
-		table_highlights: []
+		table_highlights: [],										// list of highlights in table
+		
+		editor_highlights: []										// list of highlights in editor
 	}
 });

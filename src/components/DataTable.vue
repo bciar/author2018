@@ -1,13 +1,13 @@
 <template>
   <v-data-table
     :headers="headers"
-    :items="$store.state.item_list"
+    :items="desserts"
     hide-actions
     class="elevation-1"
      ref="table_node"
   >
     <template slot="items" slot-scope="props">
-      <td v-for="(key) in headers" :key="key.value" class="text-xs-left">{{ props.item[key.value] }}</td>
+      <td v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="highlight_text('{{ props.item[key.value] }}')" v-on:click="highlight_text()">{{ props.item[key.value] }}</td>
     </template>
     <template slot="no-data">
       <v-alert :value="true" color="error" icon="warning">
@@ -23,8 +23,7 @@ export default {
     name: 'DataTable',
     data () {
         return {
-          text: "Hello World!",
-          desserts: []
+          text: "Hello World!"
         }
     },
     computed: {
@@ -39,6 +38,9 @@ export default {
                 header.push(data);
             });
             return header;
+        },
+        desserts: function() {
+          return this.$store.state.item_list;
         }
     },
     components: {
@@ -74,6 +76,25 @@ export default {
         var highlight_word = "<span class='highlight'>"+" " + innerText.substring(pos, pos + str.length) + "</span>";
         var end_part = innerText.substring(pos + str.length,innerText.length);
         cell.innerHTML = start_part + highlight_word + end_part;
+      },
+
+      highlight_text (str) {
+        var str = this.GetWordByPos(window.getSelection().anchorNode.textContent, window.getSelection().focusOffset);
+        this.erase_highlight();
+        console.log(str);
+        this.highlight_word(str);
+        //console.log(this);
+        this.$parent.highlight_word(str);
+      },
+
+      GetWordByPos(str, pos) {
+        var left = str.substring(0, pos);
+        var right = str.substring(pos);
+
+        left = left.replace(/^.+ /g, "");
+        right = right.replace(/ .+$/g, "");
+
+        return left + right;
       }
 
     }

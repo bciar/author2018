@@ -16,7 +16,7 @@
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
-            <div v-on:click.stop="select_word()" v-on:dblclick="select_word()" style="height:calc(100% - 200px)">
+            <div style="height:calc(100% - 200px)">
               <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit"></rich-text>
             </div>
           </v-flex>
@@ -80,7 +80,43 @@ export default {
     "rich-text" :VueEditor
     },
   methods: {
-    select_word () {
+    getIndicesOf(searchStr, str, caseSensitive) {
+        var searchStrLen = searchStr.length;
+        if (searchStrLen == 0) {
+            return [];
+        }
+        var startIndex = 0, index, indices = [];
+        if (!caseSensitive) {
+            str = str.toLowerCase();
+            searchStr = searchStr.toLowerCase();
+        }
+        while ((index = str.indexOf(searchStr, startIndex)) > -1) {
+            indices.push(index);
+            startIndex = index + searchStrLen;
+        }
+        return indices;
+    },
+
+    highlight_word (word) {
+      
+      var textContent = this.editor.getText().toLowerCase();
+      var indices = this.getIndicesOf(word, textContent);
+      console.log(indices);
+
+
+
+      // bold each items in editor
+      /*for(var key in this.$store.state.ontology_index_list) {
+        var index = textContent.search(key);
+        this.editor.formatText(index, key.length, "bold", true);
+      }
+
+      console.log(this.$refs.table_view);
+      //this.$refs.table_view.update();
+      this.$refs.table_view.$emit('update');*/
+
+
+
       //console.log(this.editor.getSelection());
       /*
       var dt = window.getSelection();
@@ -143,6 +179,7 @@ export default {
                   console.log(item.name);
                   item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
                   console.log(item);
+
                   //this.$refs.table_view.$emit('updated', this.$refs.table_view);
                 }
               });
@@ -161,6 +198,9 @@ export default {
         this.editor.formatText(index, key.length, "bold", true);
       }
 
+      console.log(this.$refs.table_view);
+      //this.$refs.table_view.update();
+      this.$refs.table_view.$emit('update');
       ////////////////////////////////////////////////////////////////////////
 
     }
