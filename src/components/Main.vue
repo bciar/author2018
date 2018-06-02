@@ -23,7 +23,7 @@
         </v-layout>
       </v-flex>
       <v-flex xs7 fill-height>
-        <table-view></table-view>
+        <table-view ref="table_view"></table-view>
       </v-flex>
     </v-layout>
   </div>
@@ -48,9 +48,19 @@ export default {
     }
   },
   mounted: function() {
+    
     this.editor = this.$refs.rich_edit.quill;
-    const cnt_editor = this.editor
+    //const cnt_editor = this.editor
+    const self = this;
     this.editor.on('selection-change', function(range, oldRange, source) {
+
+    var sel_node = window.getSelection();
+    self.$refs.table_view.erase_highlight();
+    if (sel_node.focusNode.parentNode.nodeName == "STRONG") {
+      var highlight_str = sel_node.focusNode.nodeValue;
+      self.$refs.table_view.highlight_word(highlight_str);
+    }
+    /*
       if (range) {
         console.log(source);
         if (range.length == 0) {
@@ -61,7 +71,7 @@ export default {
         }
       } else {
         console.log('Cursor not in the editor');
-      }
+      }*/
     });
   },
   components: { 
@@ -71,7 +81,6 @@ export default {
     },
   methods: {
     select_word () {
-      console.log(window.getSelection());
       //console.log(this.editor.getSelection());
       /*
       var dt = window.getSelection();
@@ -105,18 +114,40 @@ export default {
 
       /////////////////////////////////////////////////////////////////////////
 
-      console.log(fetch_result);
       const records = this.$store.state.item_list;
+      const self = this;
       fetch_result.statements.forEach(val => {
         val.biologicalEntities.forEach(bioVal => {
-          var item = {
-            name: bioVal.name
-          };
-          // check if item exist in table
-          if(!this.$store.state.item_index_list.hasOwnProperty(item.name)){
-            this.$store.state.item_index_list[item.name] = item.name;             // save item for index key for future search
-            this.$store.state.item_list.push(item);                               // add item record ; this will display item in table view
+          const bio = bioVal;
+
+          if(!this.$store.state.ontology_index_list.hasOwnProperty(bioVal.name)){
+            this.$store.state.ontology_index_list[bioVal.name] = bioVal.name;
           }
+
+          bioVal.characters.forEach(character => {
+
+            var item_string = bio.name + " " + character.name;
+
+            // check if item exist in table
+
+            if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
+              this.$store.state.item_index_list[item_string] = item_string;             // save item for index key for future search
+              var item = {
+                name: item_string
+              }
+              item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
+              this.$store.state.item_list.push(item);                               // add item record ; this will display item in table view
+            } else {
+              this.$store.state.item_list.forEach(item => {
+                if(item.name == item_string) {
+                  console.log(item.name);
+                  item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
+                  console.log(item);
+                  //this.$refs.table_view.$emit('updated', this.$refs.table_view);
+                }
+              });
+            }
+          });
         });
       });
 
@@ -125,7 +156,7 @@ export default {
 
       const textContent = this.editor.getText().toLowerCase();
       // bold each items in editor
-      for(var key in this.$store.state.item_index_list) {
+      for(var key in this.$store.state.ontology_index_list) {
         var index = textContent.search(key);
         this.editor.formatText(index, key.length, "bold", true);
       }

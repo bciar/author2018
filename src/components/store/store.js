@@ -19,6 +19,12 @@ export const store = new Vuex.Store({
 
 		item_index_list: {},										// list of item names for inex
 
-		active_tab: 0												// index of active tab
+		character_index_list: {},										// list of character names for inex
+		
+		ontology_index_list: {},										// list of ontology names for inex
+
+		active_tab: 0,												// index of active tab
+
+		table_highlights: []
 	}
 });
