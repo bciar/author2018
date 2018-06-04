@@ -44,7 +44,7 @@ export default {
   data () {
     return {
       customToolbar: [
-        //['bold', 'italic', 'underline',{'color':[]}]
+        ['bold', 'italic',{'color':[]},{size: [ 'small', false, 'large', 'huge' ]}]
       ],
       editContent: "",
       editor: null
@@ -176,7 +176,7 @@ export default {
         var index = textContent.search(key);
         this.editor.formatText(index, key.length, "bold", true);
       }
-      console.log(this.$refs.table_view);
+      //console.log(this.$refs.table_view);
       this.$refs.table_view.$emit('update');
       ////////////////////////////////////////////////////////////////////////
 
@@ -199,25 +199,47 @@ export default {
             data: item[key]
           });
         })
-      })
+      });
+
+      console.log(JSON.stringify(this.$store.state.ontology_index_list));
     },
 
     restore_data () {
-      //console.log(firebase.auth().currentUser);
       const self = this;
-      this.$store.state.tab_list = [];
-      this.$store.state.tab_list.length = 0;
-      this.$store.state.text_array = [];
-      this.$store.state.text_array.length = 0;
-      var starCountRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description');
-      starCountRef.on('value', function(snapshot) {
+      var descriptionRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description');
+      descriptionRef.on('value', function(snapshot) {
+        // restore data from db to text view
+        self.$store.state.tab_list.length = 0;
+        self.$store.state.text_array.length = 0;
         var description_json = snapshot.val();
         Object.keys(description_json).forEach(key => {
           self.$store.state.tab_list.push(key);
           self.$store.state.text_array.push(description_json[key].description);
         });
         self.$store.state.active_tab = 0;
-      })
+      });
+
+      // restore data to table
+      var tableRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table');
+      tableRef.on('value', function(snapshot) {
+        self.$store.state.item_index_list = {};
+        self.$store.state.item_list = [];
+        // restore data from db to table
+        var table_json = snapshot.val();
+        //console.log(table_json);
+        Object.keys(table_json).forEach(key => {
+          console.log(key);
+          self.$store.state.item_index_list[key] = key;
+          const item = {
+          }
+          Object.keys(table_json[key]).forEach(item_key => {
+            console.log(item_key);
+            console.log(table_json[key][item_key].data);
+            item[item_key] = table_json[key][item_key].data;
+          });
+          self.$store.state.item_list.push(item);
+        });
+      });
     }
 
 

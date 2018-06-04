@@ -13,15 +13,13 @@ export const store = new Vuex.Store({
 
 		item_list: [],												// item list for data table
 
-		json_list: [{},{},{}],										// json data for each tabs
+		json_list: [],										// json data for each tabs
 
 		text_array: [],			// text data for each tabs
 
 		item_index_list: {},										// list of item names for inex
-
-		character_index_list: {},										// list of character names for inex
 		
-		ontology_index_list: {},										// list of ontology names for inex
+		ontology_index_list: {},									// list of ontology names for inex
 
 		active_tab: 0,												// index of active tab
 
