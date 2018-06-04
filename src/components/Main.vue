@@ -12,7 +12,7 @@
             Edit a template to produce new description
           </v-alert>
             <v-btn v-on:click="matricize()" color="gray">Matricize</v-btn>
-            <v-btn color="white">Save</v-btn>
+            <v-btn v-on:click="save()" color="white">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
@@ -35,6 +35,7 @@ import DataTable from '@/components/DataTable'
 import { VueEditor } from 'vue2-editor'
 
 import json from '@/json/responseJSON.json'
+import firebase from 'firebase'
 
 
 
@@ -120,12 +121,11 @@ export default {
       // there should fetch function; result will be retrieved to fetch result
       //var parsecontent = JSON.stringify(this.editor.getContents());
       var parsecontent = this.editor.getText();
-      console.log(parsecontent);
-      console.log(this.$http);
-      this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
-           console.log(response);
-      });
-
+      // console.log(parsecontent);
+      // console.log(this.$http);
+      // this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
+      //      console.log(response);
+      // });
       fetch_result = json;    // save simulated data
 
       /////////////////////////////////////////////////////////////////////////
@@ -156,11 +156,7 @@ export default {
             } else {
               this.$store.state.item_list.forEach(item => {
                 if(item.name == item_string) {
-                  console.log(item.name);
                   item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
-                  console.log(item);
-
-                  //this.$refs.table_view.$emit('updated', this.$refs.table_view);
                 }
               });
             }
@@ -177,11 +173,31 @@ export default {
         var index = textContent.search(key);
         this.editor.formatText(index, key.length, "bold", true);
       }
-
+      console.log(this.$refs.table_view);
       this.$refs.table_view.$emit('update');
       ////////////////////////////////////////////////////////////////////////
 
     },
+
+    save() {
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description').remove();
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table').remove();
+      this.$store.state.tab_list.forEach((tab_item,key) => {
+        firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description/' + this.$store.state.tab_list[key]).set({
+          description: this.$store.state.text_array[key]
+        });
+      });
+      
+      this.$store.state.item_list.forEach((item, index) => {
+        Object.keys(item).forEach(key => {
+          var save_item = {};
+          save_item[key] = item[key];
+          firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table/' + item['name'] + '/'+key).set({
+            data: item[key]
+          });
+        })
+      })
+    }
 
 
   }

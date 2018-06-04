@@ -62,9 +62,21 @@ export default {
                 this.$store.state.text_array.push("");
 
             } else {
+                var oldName = this.$store.state.tab_list[this.current_index];
+                this.$store.state.item_list.forEach((item, index) => {
+                    if (item.hasOwnProperty(oldName)) {
+                        
+                        item[this.new_name] = this.$store.state.tab_list[this.current_index];
+                        delete item[oldName];
+                    }
+                });
                 this.$store.state.tab_list[this.current_index] = this.new_name;
             }
             this.editDlg = false;
+            
+            this.$parent.$refs.table_view.$emit('update');
+            this.$parent.$refs.table_view.$forceUpdate();
+            console.log(this.$parent.$refs.table_view);
         },
         changeTab (index) {
             this.$store.state.active_tab = index;
