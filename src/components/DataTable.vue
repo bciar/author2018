@@ -5,6 +5,7 @@
     hide-actions
     class="elevation-1"
      ref="table_node"
+     id="table_viewID"
   >
     <template slot="items" slot-scope="props">
       <td v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="highlight_text('{{ props.item[key.value] }}')" v-on:click="highlight_text()">{{ props.item[key.value] }}</td>
@@ -28,7 +29,7 @@ export default {
     },
     computed: {
         headers: function() {
-            var header = [{text:"Name",value:"name"}];
+            var header = [{text:"Name",value:"name",sortable:false}];
             this.$store.state.tab_list.forEach(val => {
                 var data = {
                     text: val,
@@ -82,9 +83,7 @@ export default {
       highlight_text (str) {
         var str = this.GetWordByPos(window.getSelection().anchorNode.textContent, window.getSelection().focusOffset);
         this.erase_highlight();
-        console.log(str);
         this.highlight_word(str);
-        //console.log(this);
         this.$parent.highlight_word(str);
       },
 

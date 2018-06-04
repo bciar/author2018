@@ -17,7 +17,7 @@
         <v-layout xs12 fill-height>
           <v-flex xs12>
             <div style="height:calc(100% - 200px)">
-              <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit"></rich-text>
+              <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
             </div>
           </v-flex>
         </v-layout>
@@ -70,7 +70,6 @@ export default {
     "rich-text" :VueEditor
     },
   methods: {
-
     // get all position data from text editor and add to hightlight array
     getIndicesOf(searchStr, str, caseSensitive) {
         var searchStrLen = searchStr.length;
@@ -108,12 +107,10 @@ export default {
 
     // erase highlight format from words
     erase_highlight () {
-      console.log("call_erase_text_view");
       this.$store.state.editor_highlights.forEach(item => {
         this.editor.formatText(item.pos, item.len, {"background-color":"white","color":"black"}, true);
       });
       this.$store.state.editor_highlights = [];
-      console.log(this.$store.state.editor_highlights);
     },
 
     matricize () {
@@ -184,7 +181,9 @@ export default {
       this.$refs.table_view.$emit('update');
       ////////////////////////////////////////////////////////////////////////
 
-    }
+    },
+
+
   }
 }
 
