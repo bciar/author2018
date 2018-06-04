@@ -67,6 +67,7 @@ export default {
           cell.innerHTML = cell.innerText;
         })
         this.$store.state.table_highlights.length = 0;
+        this.$parent.erase_highlight();
       },
 
       highlight_cell(cell, str) {

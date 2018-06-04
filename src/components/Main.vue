@@ -85,60 +85,36 @@ export default {
         if (searchStrLen == 0) {
             return [];
         }
-        var startIndex = 0, index, indices = [];
+        var startIndex = 0, index;
         if (!caseSensitive) {
             str = str.toLowerCase();
             searchStr = searchStr.toLowerCase();
         }
         while ((index = str.indexOf(searchStr, startIndex)) > -1) {
-            indices.push(index);
+            var item = {
+              pos:index,
+              len:searchStr.length
+            }
+            this.$store.state.editor_highlights.push(item);
             startIndex = index + searchStrLen;
         }
-        return indices;
     },
 
     highlight_word (word) {
-      
+      this.erase_highlight();
       var textContent = this.editor.getText().toLowerCase();
       var indices = this.getIndicesOf(word, textContent);
-      console.log(indices);
-
-
-
-      // bold each items in editor
-      /*for(var key in this.$store.state.ontology_index_list) {
-        var index = textContent.search(key);
-        this.editor.formatText(index, key.length, "bold", true);
-      }
-
-      console.log(this.$refs.table_view);
-      //this.$refs.table_view.update();
-      this.$refs.table_view.$emit('update');*/
-
-
-
-      //console.log(this.editor.getSelection());
-      /*
-      var dt = window.getSelection();
-      var selected_txt = dt.toString();
-      //dt.$emit("bold");
-      //var parentND = dt.p
-      //dt.nodeValue = "1111111111";
-      //dt.anchorNode.textContent = "11111111";
-      //dt.anchorNode.cloneNode();
-      if(selected_txt != "")
-      {
-        var editor = this.$refs.rich_edit;
-        console.log(editor.quill);
-        //editor.insertEmbed(0, 'image', "/src/assets/logo.png");
-        var range = editor.quill.getSelection();
-        if(range){
-
-            editor.quill.formatText(range,'bold',true);
-        }
-        editor.quill.insertEmbed(range.index, 'image', "http://localhost:8081/assets/logo.png");
-      }
-      */
+      this.$store.state.editor_highlights.forEach(item => {
+        this.editor.formatText(item.pos, item.len, {"background-color":"yellowgreen","color":"blue"}, true);
+      });
+    },
+    erase_highlight () {
+      console.log("call_erase_text_view");
+      this.$store.state.editor_highlights.forEach(item => {
+        this.editor.formatText(item.pos, item.len, {"background-color":"white","color":"black"}, true);
+      });
+      this.$store.state.editor_highlights = [];
+      console.log(this.$store.state.editor_highlights);
     },
     matricize () {
 
