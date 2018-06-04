@@ -9,8 +9,11 @@ import router from './router'
 import {store} from './components/store/store.js';
 
 import Vuetify from 'vuetify'
+import VueResource from "vue-resource"
 import 'vuetify/dist/vuetify.min.css'
 //import 'material-design-icons-iconfont/dist/material-design-icons.css'
+
+Vue.use(VueResource);
 
 Vue.use(Vuetify)
 Vue.use(VueFire);

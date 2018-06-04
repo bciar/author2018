@@ -36,6 +36,8 @@ import { VueEditor } from 'vue2-editor'
 
 import json from '@/json/responseJSON.json'
 
+
+
 export default {
   name: 'Main',
   data () {
@@ -60,18 +62,6 @@ export default {
       var highlight_str = sel_node.focusNode.nodeValue;
       self.$refs.table_view.highlight_word(highlight_str);
     }
-    /*
-      if (range) {
-        console.log(source);
-        if (range.length == 0) {
-          console.log('User cursor is on', range.index);
-        } else {
-          var text = cnt_editor.getText(range.index, range.length);
-          console.log('User has highlighted', text);
-        }
-      } else {
-        console.log('Cursor not in the editor');
-      }*/
     });
   },
   components: { 
@@ -131,7 +121,16 @@ export default {
       var fetch_result;
 
       // there should fetch function; result will be retrieved to fetch result
-      
+      //var parsecontent = JSON.stringify(this.editor.getContents());
+      var parsecontent = this.editor.getText();
+      console.log(parsecontent);
+      console.log(this.$http);
+      this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)),
+      function (data) {
+           //vm.getTemp = data.main.temp;
+           console.log(data);
+      }
+
       fetch_result = json;    // save simulated data
 
       /////////////////////////////////////////////////////////////////////////
@@ -184,8 +183,6 @@ export default {
         this.editor.formatText(index, key.length, "bold", true);
       }
 
-      console.log(this.$refs.table_view);
-      //this.$refs.table_view.update();
       this.$refs.table_view.$emit('update');
       ////////////////////////////////////////////////////////////////////////
 
