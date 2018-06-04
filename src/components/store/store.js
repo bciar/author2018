@@ -9,13 +9,13 @@ export const store = new Vuex.Store({
 		logged_in: null,
 		auth_id: -1,
 
-		tab_list: ["species1","species2","species3"],				// tab list
+		tab_list: [],				// tab list
 
 		item_list: [],												// item list for data table
 
 		json_list: [{},{},{}],										// json data for each tabs
 
-		text_array: ["Petals mostly 5, deciduous","b","c"],			// text data for each tabs
+		text_array: [],			// text data for each tabs
 
 		item_index_list: {},										// list of item names for inex
 

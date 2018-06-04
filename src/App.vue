@@ -63,7 +63,7 @@ export default {
       this.$store.state.logged_in = false;
       this.$root.user = null
       firebase.auth().signOut().then(function () {
-        router.push({path: '/login'})
+        //router.push({path: '/'})
       })
     },
     onLogin() {

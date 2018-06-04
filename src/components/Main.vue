@@ -12,7 +12,7 @@
             Edit a template to produce new description
           </v-alert>
             <v-btn v-on:click="matricize()" color="gray">Matricize</v-btn>
-            <v-btn v-on:click="save()" color="white">Save</v-btn>
+            <v-btn v-on:click="save_data()" color="white">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
@@ -50,7 +50,10 @@ export default {
       editor: null
     }
   },
+  beforeCreate: function() {
+  },
   mounted: function() {
+    this.restore_data();
 
     this.editor = this.$refs.rich_edit.quill;
     //const cnt_editor = this.editor
@@ -179,7 +182,7 @@ export default {
 
     },
 
-    save() {
+    save_data() {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description').remove();
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table').remove();
       this.$store.state.tab_list.forEach((tab_item,key) => {
@@ -196,6 +199,24 @@ export default {
             data: item[key]
           });
         })
+      })
+    },
+
+    restore_data () {
+      //console.log(firebase.auth().currentUser);
+      const self = this;
+      this.$store.state.tab_list = [];
+      this.$store.state.tab_list.length = 0;
+      this.$store.state.text_array = [];
+      this.$store.state.text_array.length = 0;
+      var starCountRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description');
+      starCountRef.on('value', function(snapshot) {
+        var description_json = snapshot.val();
+        Object.keys(description_json).forEach(key => {
+          self.$store.state.tab_list.push(key);
+          self.$store.state.text_array.push(description_json[key].description);
+        });
+        self.$store.state.active_tab = 0;
       })
     }
 

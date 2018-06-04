@@ -35,6 +35,7 @@ new Vue({
       projectId: "author2018-53022",
       storageBucket: "author2018-53022.appspot.com",
       messagingSenderId: "515142910133"
-  	})
+    });
+    
   }
 })
