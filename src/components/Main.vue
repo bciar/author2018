@@ -50,7 +50,7 @@ export default {
     }
   },
   mounted: function() {
-    
+
     this.editor = this.$refs.rich_edit.quill;
     //const cnt_editor = this.editor
     const self = this;
@@ -64,7 +64,7 @@ export default {
     }
     });
   },
-  components: { 
+  components: {
     "taxon-tab" : Taxon,
     "table-view" : DataTable,
     "rich-text" :VueEditor
@@ -87,7 +87,7 @@ export default {
               pos:index,
               len:searchStr.length
             }
-            this.$store.state.editor_highlights.push(item);           // add to highlight array 
+            this.$store.state.editor_highlights.push(item);           // add to highlight array
             startIndex = index + searchStrLen;
         }
     },
@@ -125,11 +125,9 @@ export default {
       var parsecontent = this.editor.getText();
       console.log(parsecontent);
       console.log(this.$http);
-      this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)),
-      function (data) {
-           //vm.getTemp = data.main.temp;
-           console.log(data);
-      }
+      this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
+           console.log(response);
+      });
 
       fetch_result = json;    // save simulated data
 
