@@ -80,6 +80,8 @@ export default {
     "rich-text" :VueEditor
     },
   methods: {
+
+    // get all position data from text editor and add to hightlight array
     getIndicesOf(searchStr, str, caseSensitive) {
         var searchStrLen = searchStr.length;
         if (searchStrLen == 0) {
@@ -95,19 +97,26 @@ export default {
               pos:index,
               len:searchStr.length
             }
-            this.$store.state.editor_highlights.push(item);
+            this.$store.state.editor_highlights.push(item);           // add to highlight array 
             startIndex = index + searchStrLen;
         }
     },
 
+    // highlight a word in text editor
     highlight_word (word) {
       this.erase_highlight();
       var textContent = this.editor.getText().toLowerCase();
+
+      // add positions of word to highlight
       var indices = this.getIndicesOf(word, textContent);
+
+      // add highlight format to words
       this.$store.state.editor_highlights.forEach(item => {
         this.editor.formatText(item.pos, item.len, {"background-color":"yellowgreen","color":"blue"}, true);
       });
     },
+
+    // erase highlight format from words
     erase_highlight () {
       console.log("call_erase_text_view");
       this.$store.state.editor_highlights.forEach(item => {
@@ -116,6 +125,7 @@ export default {
       this.$store.state.editor_highlights = [];
       console.log(this.$store.state.editor_highlights);
     },
+
     matricize () {
 
       var fetch_result;
