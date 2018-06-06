@@ -9,22 +9,22 @@ export const store = new Vuex.Store({
 		logged_in: null,
 		auth_id: -1,
 
-		tab_list: [],				// tab list
+		tab_list: [],		// tab list
 
-		item_list: [],												// item list for data table
+		item_list: [],		// item list for Table, e.g. [ 0 => { name: "petal color", species1: "red", species2: "blue" }, 1 => { name: "petal count", species1: "2", species2: "4" }]
 
-		json_list: [],										// json data for each tabs
+		json_api_result: [],	// json result coming from parse service API
 
-		text_array: [],			// text data for each tabs
+		text_array: [],			// text data for each tabs, e.g. [0 => "<b>petals</b> mostly 5, deciduous"]
 
-		item_index_list: {},										// list of item names for inex
-		
-		ontology_index_list: {},									// list of ontology names for inex
+		item_index_list: {},	// list of item name, e.g. { "petal color":"petal color", "petal count":"petal count"}
 
-		active_tab: 0,												// index of active tab
+		ontology_index_list: {},	// list of ontology name, e.g. { "petal": "petal", "flower": "flower" }
 
-		table_highlights: [],										// list of highlights in table
-		
-		editor_highlights: []										// list of highlights in editor
+		active_tab: 0,	// index of active tab
+
+		table_highlights: [],		// list of highlights in table
+
+		editor_highlights: []		// list of highlights in editor
 	}
 });
