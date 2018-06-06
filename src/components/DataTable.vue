@@ -8,7 +8,7 @@
      id="table_viewID"
   >
     <template slot="items" slot-scope="props">
-      <td v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="highlight_text('{{ props.item[key.value] }}')" v-on:click="highlight_text()">{{ props.item[key.value] }}</td>
+      <td contenteditable="true" v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="highlight_text" v-on:click="highlight_text" v-on:keydown="keydown_event">{{ props.item[key.value] }}</td>
     </template>
     <template slot="no-data">
       <v-alert :value="true" color="error" icon="warning">
@@ -80,7 +80,11 @@ export default {
         cell.innerHTML = start_part + highlight_word + end_part;
       },
 
-      highlight_text (str) {
+      highlight_text () {
+        if(window.getSelection().toString() == "")
+        {
+          return;
+        }
         var str = this.GetWordByPos(window.getSelection().anchorNode.textContent, window.getSelection().focusOffset);
         this.erase_highlight();
         this.highlight_word(str);
@@ -95,8 +99,26 @@ export default {
         right = right.replace(/ .+$/g, "");
 
         return left + right;
-      }
+      },
 
+      keyup_event (event) {
+        
+        console.log(event);
+      },
+
+      keydown_event (event) {
+        event.preventDefault();
+        console.log(event.key);
+        console.log(window.getSelection());
+        if (window.getSelection().focusNode.parentElement.className == "new-text") {
+          //window.getSelection().focusNode.textContent += event.key;
+          return ; 
+        } else {
+          var caret_offset = window.getSelection().focusOffset;
+          //window.getSelection().focusNode.textContent += event.key;
+          window.getSelection().anchorNode.data = window.getSelection().anchorNode.data.substring(0,window.getSelection().anchorOffset) + "<span class='new-text'>" + event.key + "</span>" + window.getSelection().anchorNode.data.substring(window.getSelection().anchorOffset,window.getSelection().anchorNode.data.length);
+        }
+      }
     }
 }
 
