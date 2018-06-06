@@ -8,7 +8,13 @@
      id="table_viewID"
   >
     <template slot="items" slot-scope="props">
-      <td contenteditable="true" v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="highlight_text" v-on:click="highlight_text" v-on:keydown="keydown_event">{{ props.item[key.value] }}</td>
+      <td contenteditable="false" v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="toggle_edit" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])" v-on:keydown.enter="keydown_event">
+        <v-tooltip bottom>
+          <span slot="activator">{{ props.item[key.value] }}</span>
+        <span>{{ props.item[key.value] }}</span>
+        </v-tooltip>
+      </td>
+
     </template>
     <template slot="no-data">
       <v-alert :value="true" color="error" icon="warning">
@@ -65,7 +71,8 @@ export default {
 
       erase_highlight() {
         this.$store.state.table_highlights.forEach(cell => {
-          cell.innerHTML = cell.innerText;
+          //console.log(cell); 
+          cell.firstChild.firstChild.innerHTML = cell.innerText;
         })
         this.$store.state.table_highlights.length = 0;
         this.$parent.erase_highlight();
@@ -77,10 +84,14 @@ export default {
         var start_part = innerText.substring(0,pos);
         var highlight_word = "<span class='highlight'>"+" " + innerText.substring(pos, pos + str.length) + "</span>";
         var end_part = innerText.substring(pos + str.length,innerText.length);
-        cell.innerHTML = start_part + highlight_word + end_part;
+        console.log(cell);
+        cell.firstChild.firstChild.innerHTML = start_part + highlight_word + end_part;
       },
 
-      highlight_text () {
+      highlight_text (event) {
+        event.preventDefault();
+        
+        console.log('highlight');
         if(window.getSelection().toString() == "")
         {
           return;
@@ -101,23 +112,22 @@ export default {
         return left + right;
       },
 
-      keyup_event (event) {
-        
-        console.log(event);
+      keyup_event (origin_text) {
+        var new_text = window.getSelection().focusNode.parentNode.textContent;
+        if (new_text != origin_text) {
+          console.log(window.getSelection());
+          window.getSelection().focusNode.parentNode.className += " changed-cell";
+        }
+
       },
 
       keydown_event (event) {
         event.preventDefault();
-        console.log(event.key);
-        console.log(window.getSelection());
-        if (window.getSelection().focusNode.parentElement.className == "new-text") {
-          //window.getSelection().focusNode.textContent += event.key;
-          return ; 
-        } else {
-          var caret_offset = window.getSelection().focusOffset;
-          //window.getSelection().focusNode.textContent += event.key;
-          window.getSelection().anchorNode.data = window.getSelection().anchorNode.data.substring(0,window.getSelection().anchorOffset) + "<span class='new-text'>" + event.key + "</span>" + window.getSelection().anchorNode.data.substring(window.getSelection().anchorOffset,window.getSelection().anchorNode.data.length);
-        }
+        event.srcElement.contentEditable = false;
+      },
+      toggle_edit (event) {
+        console.log(event);
+        event.srcElement.contentEditable = true;
       }
     }
 }
