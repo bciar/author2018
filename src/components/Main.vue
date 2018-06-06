@@ -124,15 +124,13 @@ export default {
       // there should fetch function; result will be retrieved to fetch result
       //var parsecontent = JSON.stringify(this.editor.getContents());
       var parsecontent = this.editor.getText();
-      // console.log(parsecontent);
-      // console.log(this.$http);
-      // this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
-      //      console.log(response);
-      // });
-      fetch_result = json;    // save simulated data
+      console.log(parsecontent);
+      console.log(this.$http);
+      this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
+           console.log(response);
 
-      /////////////////////////////////////////////////////////////////////////
 
+      fetch_result = response.body;    // save simulated data
       const records = this.$store.state.item_list;
       const self = this;
       fetch_result.statements.forEach(val => {
@@ -174,18 +172,28 @@ export default {
       // bold each items in editor
       for(var key in this.$store.state.ontology_index_list) {
         var index = textContent.search(key);
-        this.editor.formatText(index, key.length, "bold", true);
+        if ( index != -1) {
+          this.editor.formatText(index, key.length, "bold", true);
+        }
       }
       //console.log(this.$refs.table_view);
       this.$refs.table_view.$emit('update');
       ////////////////////////////////////////////////////////////////////////
+
+
+      });
+
+      /////////////////////////////////////////////////////////////////////////
+
 
     },
 
     save_data() {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description').remove();
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table').remove();
+      console.log(this.$store.state.tab_list);
       this.$store.state.tab_list.forEach((tab_item,key) => {
+        console.log(tab_item);
         firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description/' + this.$store.state.tab_list[key]).set({
           description: this.$store.state.text_array[key]
         });
@@ -201,48 +209,61 @@ export default {
         })
       });
 
-      console.log(JSON.stringify(this.$store.state.ontology_index_list));
+      var ontology_index_string = JSON.stringify(this.$store.state.ontology_index_list);
+      firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/indices/' + 'ontology').set({
+        data: ontology_index_string
+      });
+
+      //console.log(JSON.stringify(this.$store.state.ontology_index_list));
     },
 
     restore_data () {
       const self = this;
       var descriptionRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description');
       descriptionRef.on('value', function(snapshot) {
-        // restore data from db to text view
-        self.$store.state.tab_list.length = 0;
-        self.$store.state.text_array.length = 0;
-        var description_json = snapshot.val();
-        Object.keys(description_json).forEach(key => {
-          self.$store.state.tab_list.push(key);
-          self.$store.state.text_array.push(description_json[key].description);
-        });
-        self.$store.state.active_tab = 0;
+        if(snapshot.val() != null) {
+          console.log(snapshot.val());
+          // restore data from db to text view
+          self.$store.state.tab_list.length = 0;
+          self.$store.state.text_array.length = 0;
+          var description_json = snapshot.val();
+          Object.keys(description_json).forEach(key => {
+            self.$store.state.tab_list.push(key);
+            self.$store.state.text_array.push(description_json[key].description);
+          });
+          self.$store.state.active_tab = 0;
+        }
       });
 
       // restore data to table
       var tableRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table');
       tableRef.on('value', function(snapshot) {
-        self.$store.state.item_index_list = {};
-        self.$store.state.item_list = [];
-        // restore data from db to table
-        var table_json = snapshot.val();
-        //console.log(table_json);
-        Object.keys(table_json).forEach(key => {
-          console.log(key);
-          self.$store.state.item_index_list[key] = key;
-          const item = {
-          }
-          Object.keys(table_json[key]).forEach(item_key => {
-            console.log(item_key);
-            console.log(table_json[key][item_key].data);
-            item[item_key] = table_json[key][item_key].data;
+        if(snapshot.val() != null) {
+          self.$store.state.item_index_list = {};
+          self.$store.state.item_list = [];
+          // restore data from db to table
+          var table_json = snapshot.val();
+          //console.log(table_json);
+          Object.keys(table_json).forEach(key => {
+            // console.log(key);
+            self.$store.state.item_index_list[key] = key;
+            const item = {
+            }
+            Object.keys(table_json[key]).forEach(item_key => {
+              item[item_key] = table_json[key][item_key].data;
+            });
+            self.$store.state.item_list.push(item);
           });
-          self.$store.state.item_list.push(item);
-        });
+        }
+      });
+      var ontology_index = firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/indices/' + 'ontology');
+      ontology_index.on('value', function(snapshot) {
+        //console.log(snapshot.val());
+        if(snapshot.val() != null) {
+        self.$store.state.ontology_index_list = JSON.parse(snapshot.val().data);
+        }
       });
     }
-
-
   }
 }
 

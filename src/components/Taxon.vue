@@ -76,7 +76,6 @@ export default {
             
             this.$parent.$refs.table_view.$emit('update');
             this.$parent.$refs.table_view.$forceUpdate();
-            console.log(this.$parent.$refs.table_view);
         },
         changeTab (index) {
             this.$store.state.active_tab = index;
