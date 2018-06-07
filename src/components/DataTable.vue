@@ -8,7 +8,7 @@
      id="table_viewID"
   >
     <template slot="items" slot-scope="props">
-      <td contenteditable="false" v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:dblclick="toggle_edit" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])" v-on:keydown.enter="keydown_event">
+      <td contenteditable="true" v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])">
         <v-tooltip bottom>
           <span slot="activator">{{ props.item[key.value] }}</span>
         <span>{{ props.item[key.value] }}</span>
@@ -72,7 +72,7 @@ export default {
       erase_highlight() {
         this.$store.state.table_highlights.forEach(cell => {
           //console.log(cell); 
-          cell.firstChild.firstChild.innerHTML = cell.innerText;
+          cell.firstChild.firstChild.innerHTML = cell.firstChild.firstChild.innerText;
         })
         this.$store.state.table_highlights.length = 0;
         this.$parent.erase_highlight();
@@ -113,10 +113,18 @@ export default {
       },
 
       keyup_event (origin_text) {
-        var new_text = window.getSelection().focusNode.parentNode.textContent;
-        if (new_text != origin_text) {
-          console.log(window.getSelection());
-          window.getSelection().focusNode.parentNode.className += " changed-cell";
+        if(window.getSelection().focusNode.parentNode.className.includes("highlight")) {
+          var new_text = window.getSelection().focusNode.parentNode.parentNode.textContent;
+          if (new_text != origin_text) {
+            window.getSelection().focusNode.parentNode.parentNode.className += " changed-cell";
+          }
+
+        }
+        else {
+          var new_text = window.getSelection().focusNode.parentNode.textContent;
+          if (new_text != origin_text) {
+            window.getSelection().focusNode.parentNode.className += " changed-cell";
+          }
         }
 
       },
@@ -126,8 +134,11 @@ export default {
         event.srcElement.contentEditable = false;
       },
       toggle_edit (event) {
+        event.preventDefault();
         console.log(event);
         event.srcElement.contentEditable = true;
+        //event.srcElement.setSelectionRange(0,0);
+        //event.srcElement.focusNode();
       }
     }
 }
