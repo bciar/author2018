@@ -16,9 +16,24 @@
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
-            <div style="height:calc(100% - 200px)">
+            <div style="height:calc(100% - 200px)"  @contextmenu="showMenu">
               <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
+              <v-menu
+              v-model="showMenuFlag"
+              :position-x="x"
+              :position-y="y"
+              offset-y
+              absolute
+            >
+              <v-btn>Approve</v-btn>
+              <v-list>
+                <v-list-tile v-for="(item, index) in items" :key="index" @click="">
+                  <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                </v-list-tile>
+              </v-list>
+            </v-menu>
             </div>
+            
           </v-flex>
         </v-layout>
       </v-flex>
@@ -34,7 +49,7 @@ import Taxon from '@/components/Taxon'
 import DataTable from '@/components/DataTable'
 import { VueEditor } from 'vue2-editor'
 
-import json from '@/json/responseJSON.json'
+import json from '@/json/newResponseJSON.json'
 import firebase from 'firebase'
 
 
@@ -47,6 +62,15 @@ export default {
         ['bold', 'italic',{'color':[]},{size: [ 'small', false, 'large', 'huge' ]}]
       ],
       editContent: "",
+      showMenuFlag: false,
+      x: 0,
+      y: 0,
+      items: [
+        { title: 'Click Me' },
+        { title: 'Click Me' },
+        { title: 'Click Me' },
+        { title: 'Click Me 2' }
+      ],
       editor: null
     }
   },
@@ -116,29 +140,60 @@ export default {
       this.$store.state.editor_highlights = [];
     },
 
+    parseOntologyId (id) {
+      var ontologyID = id;
+      var startIndex = ontologyID.indexOf('[');
+      var endIndex = ontologyID.indexOf(']');
+      var mainResult = ontologyID.substring(startIndex+1,endIndex);
+      console.log(mainResult);
+      var firstColonIndex = mainResult.indexOf(':');
+      var searchTerm = mainResult.substring(0,firstColonIndex);
+      var slashIndex = mainResult.indexOf('/');
+      var matchingParentTerm = mainResult.substring(firstColonIndex+1, slashIndex);
+      var lastColonIndex = mainResult.lastIndexOf(':');
+      var matchingTermLabel = mainResult.substring(slashIndex + 1, lastColonIndex);
+      var matchingValue = mainResult.substring(lastColonIndex + 1, mainResult.length);
+
+      var parseResult = {
+        search_term: searchTerm,
+        matching_parent_term: matchingParentTerm,
+        matching_term_label: matchingTermLabel,
+        matching_value: matchingValue,
+      }
+      return parseResult;
+    },
+
     matricize () {
       var fetch_result;
-
       // there should fetch function; result will be retrieved to fetch result
-      //var parsecontent = JSON.stringify(this.editor.getContents());
+
       var parsecontent = this.editor.getText();
-      //console.log(encodeURI(parsecontent));
-      // console.log(this.$http);
       this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
-          console.log(response);
-          fetch_result = response.body;
-          this.$store.state.item_index_list = [];
-          this.$store.state.item_list = [];
-          const self = this;
+        //console.log(response);
+        //fetch_result = response.body;
+        fetch_result = json;
+        console.log(json);
+        this.$store.state.item_index_list = [];
+        this.$store.state.item_list = [];
+        const self = this;
 
-          fetch_result.statements.forEach(val => {
-            val.biologicalEntities.forEach(bioVal => {
-              const bio = bioVal;
+        fetch_result.statements.forEach(val => {
+          val.biologicalEntities.forEach(bioVal => {
+            const bio = bioVal;
 
-              if(!this.$store.state.ontology_index_list.hasOwnProperty(bioVal.name)){
-                this.$store.state.ontology_index_list[bioVal.name] = bioVal.name;
-              }
+            this.$store.state.ontology_index_list[bioVal.name] = {
+              name: bioVal.name,
+              approved: false,
+              nameOrigin: bioVal.name_original,
+              ontology: null
+            };
 
+            // parse and store ontology matching info
+            if(bioVal.hasOwnProperty('ontologyid')) {
+              this.$store.state.ontology_index_list[bioVal.name].ontology = this.parseOntologyId(bioVal.ontologyid);
+            }
+
+            if(bioVal.hasOwnProperty('characters')) {
               bioVal.characters.forEach(character => {
 
                 var item_string = bio.name + " " + character.name;
@@ -146,12 +201,12 @@ export default {
                 // check if item exist in table
 
                 if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
-                  this.$store.state.item_index_list[item_string] = item_string;             // save item for index key for future search
+                  this.$store.state.item_index_list[item_string] = item_string;                   // save item for index key for future search
                   var item = {
                     name: item_string
                   }
                   item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
-                  this.$store.state.item_list.push(item);                               // add item record ; this will display item in table view
+                  this.$store.state.item_list.push(item);                                         // add item record ; this will display item in table view
                 } else {
                   this.$store.state.item_list.forEach(item => {
                     if(item.name == item_string) {
@@ -160,30 +215,27 @@ export default {
                   });
                 }
               });
-            });
+            }
           });
-
-
-          //-----------------  item bold ----------------------
-
-      const textContent = this.editor.getText().toLowerCase();
-      // bold each items in editor
-      for(var key in this.$store.state.ontology_index_list) {
-        var index = textContent.search(key);
-        if ( index != -1) {
-          this.editor.formatText(index, key.length, "bold", true);
+        });
+        //-----------------  item bold ----------------------
+        console.log(this.$store.state.ontology_index_list);
+        const textContent = this.editor.getText().toLowerCase();
+        // bold each items in editor
+        for(var key in this.$store.state.ontology_index_list) {
+          var index = textContent.search(key);
+          if ( index != -1) {
+            this.editor.formatText(index, key.length, "bold", true);
+            
+            if (this.$store.state.ontology_index_list[key].ontology != null) {
+              if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
+                this.editor.formatText(index, key.length, "color", "green");
+              }
+            }
+          }
         }
-      }
-      //console.log(this.$refs.table_view);
-      this.$refs.table_view.$emit('update');
-      ////////////////////////////////////////////////////////////////////////
-
-
+        this.$refs.table_view.$emit('update');
       });
-
-      /////////////////////////////////////////////////////////////////////////
-
-
     },
 
     save_data() {
@@ -191,7 +243,6 @@ export default {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table').remove();
       console.log(this.$store.state.tab_list);
       this.$store.state.tab_list.forEach((tab_item,key) => {
-        console.log(tab_item);
         firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description/' + this.$store.state.tab_list[key]).set({
           description: this.$store.state.text_array[key]
         });
@@ -261,6 +312,15 @@ export default {
         self.$store.state.ontology_index_list = JSON.parse(snapshot.val().data);
         }
       });
+    },
+    showMenu (e) {
+      this.showMenuFlag = false
+      this.x = e.clientX
+      this.y = e.clientY
+      this.$nextTick(() => {
+        this.showMenuFlag = true
+      })
+      e.preventDefault()
     }
   }
 }

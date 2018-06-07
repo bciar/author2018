@@ -71,7 +71,6 @@ export default {
 
       erase_highlight() {
         this.$store.state.table_highlights.forEach(cell => {
-          //console.log(cell); 
           cell.firstChild.firstChild.innerHTML = cell.firstChild.firstChild.innerText;
         })
         this.$store.state.table_highlights.length = 0;
@@ -84,14 +83,12 @@ export default {
         var start_part = innerText.substring(0,pos);
         var highlight_word = "<span class='highlight'>"+" " + innerText.substring(pos, pos + str.length) + "</span>";
         var end_part = innerText.substring(pos + str.length,innerText.length);
-        console.log(cell);
         cell.firstChild.firstChild.innerHTML = start_part + highlight_word + end_part;
       },
 
       highlight_text (event) {
         event.preventDefault();
         
-        console.log('highlight');
         if(window.getSelection().toString() == "")
         {
           return;
@@ -113,6 +110,7 @@ export default {
       },
 
       keyup_event (origin_text) {
+        //console.log(window.getSelection());
         if(window.getSelection().focusNode.parentNode.className.includes("highlight")) {
           var new_text = window.getSelection().focusNode.parentNode.parentNode.textContent;
           if (new_text != origin_text) {
@@ -126,7 +124,6 @@ export default {
             window.getSelection().focusNode.parentNode.className += " changed-cell";
           }
         }
-
       },
 
       keydown_event (event) {
@@ -135,7 +132,6 @@ export default {
       },
       toggle_edit (event) {
         event.preventDefault();
-        console.log(event);
         event.srcElement.contentEditable = true;
         //event.srcElement.setSelectionRange(0,0);
         //event.srcElement.focusNode();
