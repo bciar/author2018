@@ -13,6 +13,8 @@ export const store = new Vuex.Store({
 
 		item_list: [],		// item list for Table, e.g. [ 0 => { name: "petal color", species1: "red", species2: "blue" }, 1 => { name: "petal count", species1: "2", species2: "4" }]
 
+		itme_ontology_info_list: {},
+
 		json_api_result: [],	// json result coming from parse service API
 
 		text_array: [],			// text data for each tabs, e.g. [0 => "<b>petals</b> mostly 5, deciduous"]

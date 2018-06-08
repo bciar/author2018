@@ -19,18 +19,19 @@
             <div style="height:calc(100% - 200px)"  @contextmenu="showMenu">
               <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
               <v-menu
-              v-model="showMenuFlag"
+              v-model="showApproveMenu"
               :position-x="x"
               :position-y="y"
               offset-y
               absolute
-            >
-              <v-btn>Approve</v-btn>
+              >
               <v-list>
-                <v-list-tile v-for="(item, index) in items" :key="index" @click="">
+                <v-list-tile v-for="(item, index) in items" :key="index">
                   <v-list-tile-title>{{ item.title }}</v-list-tile-title>
                 </v-list-tile>
               </v-list>
+              <v-btn>Approve</v-btn>
+              <v-btn>Disapprove</v-btn>
             </v-menu>
             </div>
             
@@ -62,14 +63,10 @@ export default {
         ['bold', 'italic',{'color':[]},{size: [ 'small', false, 'large', 'huge' ]}]
       ],
       editContent: "",
-      showMenuFlag: false,
+      showApproveMenu: false,
       x: 0,
       y: 0,
       items: [
-        { title: 'Click Me' },
-        { title: 'Click Me' },
-        { title: 'Click Me' },
-        { title: 'Click Me 2' }
       ],
       editor: null
     }
@@ -145,7 +142,6 @@ export default {
       var startIndex = ontologyID.indexOf('[');
       var endIndex = ontologyID.indexOf(']');
       var mainResult = ontologyID.substring(startIndex+1,endIndex);
-      console.log(mainResult);
       var firstColonIndex = mainResult.indexOf(':');
       var searchTerm = mainResult.substring(0,firstColonIndex);
       var slashIndex = mainResult.indexOf('/');
@@ -172,7 +168,6 @@ export default {
         //console.log(response);
         //fetch_result = response.body;
         fetch_result = json;
-        console.log(json);
         this.$store.state.item_index_list = [];
         this.$store.state.item_list = [];
         const self = this;
@@ -198,6 +193,29 @@ export default {
 
                 var item_string = bio.name + " " + character.name;
 
+                // parse and store ontology matching info
+                if(character.hasOwnProperty('ontologyid')) {
+                  if ( !this.$store.state.itme_ontology_info_list.hasOwnProperty(character.name)) {
+                    var item = {};
+                    item[this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
+                    this.$store.state.itme_ontology_info_list[character.name] = item;
+                  } else {
+                    this.$store.state.itme_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
+                  }
+                } else {
+                  // this.$store.state.itme_ontology_info_list[character.name] = null;
+                  if ( !this.$store.state.itme_ontology_info_list.hasOwnProperty(character.name)) {
+                    var item = {};
+                    item[this.$store.state.tab_list[this.$store.state.active_tab]] = {
+                      search_term: character.value
+                    };
+                    this.$store.state.itme_ontology_info_list[character.name] = item;
+                  } else {
+                    this.$store.state.itme_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = {
+                      search_term: character.value
+                    };
+                  }
+                }
                 // check if item exist in table
 
                 if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
@@ -219,7 +237,6 @@ export default {
           });
         });
         //-----------------  item bold ----------------------
-        console.log(this.$store.state.ontology_index_list);
         const textContent = this.editor.getText().toLowerCase();
         // bold each items in editor
         for(var key in this.$store.state.ontology_index_list) {
@@ -230,6 +247,32 @@ export default {
             if (this.$store.state.ontology_index_list[key].ontology != null) {
               if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
                 this.editor.formatText(index, key.length, "color", "green");
+              }
+            }
+          }
+        }
+        
+        for(var key in this.$store.state.itme_ontology_info_list) {
+          var characterOntologyInfo = this.$store.state.itme_ontology_info_list[key];
+          if (characterOntologyInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+            if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].hasOwnProperty('matching_value')) {
+              var index = textContent.search(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
+              if ( index != -1) {
+                console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
+                if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value == 1) {
+                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "green");
+                }
+              }
+            } else {
+              var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
+              console.log(search_term + " " + search_term.length);
+
+              var index = this.editor.getText().toLowerCase().search(search_term);
+              if ( index != -1) {
+                console.log(index);
+                // this.editor.formatText(index, search_term.length, "color", "orange");
+                this.editor.insertEmbed(index + search_term.length, 'image', '/static/quiz_mark.jpg');
+                this.editor.update();
               }
             }
           }
@@ -314,13 +357,37 @@ export default {
       });
     },
     showMenu (e) {
-      this.showMenuFlag = false
-      this.x = e.clientX
-      this.y = e.clientY
-      this.$nextTick(() => {
-        this.showMenuFlag = true
-      })
-      e.preventDefault()
+      console.log(e);
+      if (e.srcElement.style.color == "green") {
+        if (e.srcElement.tagName == "STRONG") {     // search info in ontology list
+          var term = e.srcElement.textContent.toLowerCase();
+          for(var key in this.$store.state.ontology_index_list) {
+            if (this.$store.state.ontology_index_list[key].ontology != null) {
+              if (this.$store.state.ontology_index_list[key].ontology.search_term == term) {
+                // this.editor.formatText(index, key.length, "color", "green");
+                var matchingInfo = this.$store.state.ontology_index_list[key].ontology;
+                this.items = [];
+                this.items = [
+                  {title: "Search Term:" + this.$store.state.ontology_index_list[key].ontology.search_term},
+                  {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[key].ontology.matching_parent_term},
+                  {title: "Matching Term Label:" + this.$store.state.ontology_index_list[key].ontology.matching_term_label},
+                  {title: "Matching Value:" + this.$store.state.ontology_index_list[key].ontology.matching_value}
+                ];
+              }
+            }
+          }
+        }
+        else {
+                this.items = [];
+        }
+        this.showApproveMenu = false
+        this.x = e.clientX
+        this.y = e.clientY
+        this.$nextTick(() => {
+          this.showApproveMenu = true
+        })
+      }
+      e.preventDefault();
     }
   }
 }
