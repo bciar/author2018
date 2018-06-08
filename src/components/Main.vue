@@ -19,19 +19,21 @@
             <div style="height:calc(100% - 200px)"  @contextmenu="showMenu">
               <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
               <v-menu
-              v-model="showApproveMenu"
-              :position-x="x"
-              :position-y="y"
-              offset-y
-              absolute
+                v-model="contextMenuData.showApproveMenu"
+                :position-x="contextMenuData.posX"
+                :position-y="contextMenuData.posY"
+                offset-y
+                absolute
               >
               <v-list>
-                <v-list-tile v-for="(item, index) in items" :key="index">
+                <v-list-tile v-for="(item, index) in contextMenuData.contextMenuItem" :key="index">
                   <v-list-tile-title>{{ item.title }}</v-list-tile-title>
                 </v-list-tile>
+                <v-list-tile :key="-1">
+                  <v-btn v-on:click.stop="approveItem()">Approve</v-btn>
+                  <v-btn v-on:click.stop="disapproveItem()">Disapprove</v-btn>
+                </v-list-tile>
               </v-list>
-              <v-btn>Approve</v-btn>
-              <v-btn>Disapprove</v-btn>
             </v-menu>
             </div>
             
@@ -63,22 +65,23 @@ export default {
         ['bold', 'italic',{'color':[]},{size: [ 'small', false, 'large', 'huge' ]}]
       ],
       editContent: "",
-      showApproveMenu: false,
-      x: 0,
-      y: 0,
-      items: [
-      ],
-      editor: null
+      contextMenuData: {
+        posX: 0,
+        posY: 0,
+        showApproveMenu: false,
+        contextMenuItem: [],
+        dom: null
+      },
+      editor: null,
+      embedData: {}
     }
   },
   beforeCreate: function() {
   },
   mounted: function() {
-    this.restore_data();
-
-    this.editor = this.$refs.rich_edit.quill;
-    //const cnt_editor = this.editor
     const self = this;
+    this.restore_data();
+    this.editor = this.$refs.rich_edit.quill;
     this.editor.on('selection-change', function(range, oldRange, source) {
         var sel_node = window.getSelection();
         self.$refs.table_view.erase_highlight();
@@ -175,43 +178,38 @@ export default {
         fetch_result.statements.forEach(val => {
           val.biologicalEntities.forEach(bioVal => {
             const bio = bioVal;
-
             this.$store.state.ontology_index_list[bioVal.name] = {
               name: bioVal.name,
               approved: false,
               nameOrigin: bioVal.name_original,
               ontology: null
             };
-
             // parse and store ontology matching info
             if(bioVal.hasOwnProperty('ontologyid')) {
               this.$store.state.ontology_index_list[bioVal.name].ontology = this.parseOntologyId(bioVal.ontologyid);
             }
-
             if(bioVal.hasOwnProperty('characters')) {
               bioVal.characters.forEach(character => {
-
                 var item_string = bio.name + " " + character.name;
-
                 // parse and store ontology matching info
                 if(character.hasOwnProperty('ontologyid')) {
-                  if ( !this.$store.state.itme_ontology_info_list.hasOwnProperty(character.name)) {
+                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(character.name)) {
                     var item = {};
                     item[this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
-                    this.$store.state.itme_ontology_info_list[character.name] = item;
+                    this.$store.state.item_ontology_info_list[character.name] = item;
                   } else {
-                    this.$store.state.itme_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
+                    this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
                   }
                 } else {
-                  // this.$store.state.itme_ontology_info_list[character.name] = null;
-                  if ( !this.$store.state.itme_ontology_info_list.hasOwnProperty(character.name)) {
+                  // this.$store.state.item_ontology_info_list[character.name] = null;
+                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(character.name)) {
                     var item = {};
                     item[this.$store.state.tab_list[this.$store.state.active_tab]] = {
                       search_term: character.value
                     };
-                    this.$store.state.itme_ontology_info_list[character.name] = item;
+                    this.$store.state.item_ontology_info_list[character.name] = item;
                   } else {
-                    this.$store.state.itme_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = {
+                    this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = {
                       search_term: character.value
                     };
                   }
@@ -252,26 +250,40 @@ export default {
           }
         }
         
-        for(var key in this.$store.state.itme_ontology_info_list) {
-          var characterOntologyInfo = this.$store.state.itme_ontology_info_list[key];
+        for(var key in this.$store.state.item_ontology_info_list) {
+          var characterOntologyInfo = this.$store.state.item_ontology_info_list[key];
           if (characterOntologyInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
             if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].hasOwnProperty('matching_value')) {
               var index = textContent.search(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
               if ( index != -1) {
-                console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
                 if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value == 1) {
                   this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "green");
                 }
               }
             } else {
               var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
-              console.log(search_term + " " + search_term.length);
-
               var index = this.editor.getText().toLowerCase().search(search_term);
               if ( index != -1) {
-                console.log(index);
-                // this.editor.formatText(index, search_term.length, "color", "orange");
-                this.editor.insertEmbed(index + search_term.length, 'image', '/static/quiz_mark.jpg');
+                var embedOffset = 0;
+                for (var embedKey in this.embedData) {
+                  if( Number(embedKey) < index) {
+                    embedOffset ++;
+                  }
+                }
+                var isExist = 0;
+                for (var embedKey in this.embedData) {
+                  if( this.embedData[embedKey].text_index == index) {
+                    isExist ++;
+                  }
+                }
+                if(isExist == 0) {
+                  var pos = embedOffset + index + search_term.length;
+                  this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
+                  this.embedData[pos.toString()] = {
+                    search_term: search_term,
+                    text_index: index
+                  };
+                }
                 this.editor.update();
               }
             }
@@ -357,37 +369,60 @@ export default {
       });
     },
     showMenu (e) {
-      console.log(e);
       if (e.srcElement.style.color == "green") {
-        if (e.srcElement.tagName == "STRONG") {     // search info in ontology list
-          var term = e.srcElement.textContent.toLowerCase();
-          for(var key in this.$store.state.ontology_index_list) {
-            if (this.$store.state.ontology_index_list[key].ontology != null) {
-              if (this.$store.state.ontology_index_list[key].ontology.search_term == term) {
-                // this.editor.formatText(index, key.length, "color", "green");
-                var matchingInfo = this.$store.state.ontology_index_list[key].ontology;
-                this.items = [];
-                this.items = [
-                  {title: "Search Term:" + this.$store.state.ontology_index_list[key].ontology.search_term},
-                  {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[key].ontology.matching_parent_term},
-                  {title: "Matching Term Label:" + this.$store.state.ontology_index_list[key].ontology.matching_term_label},
-                  {title: "Matching Value:" + this.$store.state.ontology_index_list[key].ontology.matching_value}
+        var term = e.srcElement.textContent.toLowerCase();
+        this.contextMenuData.dom = e.srcElement;
+        if (e.srcElement.tagName == "STRONG") {
+          // search info in ontology list
+          if(this.$store.state.ontology_index_list.hasOwnProperty(term)) {
+            if (this.$store.state.ontology_index_list[term].ontology.search_term == term) {
+              var matchingInfo = this.$store.state.ontology_index_list[term].ontology;
+              this.contextMenuData.contextMenuItem = [];
+              this.contextMenuData.contextMenuItem = [
+                {title: "Search Term:" + this.$store.state.ontology_index_list[term].ontology.search_term},
+                {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[term].ontology.matching_parent_term},
+                {title: "Matching Term Label:" + this.$store.state.ontology_index_list[term].ontology.matching_term_label},
+                {title: "Matching Value:" + this.$store.state.ontology_index_list[term].ontology.matching_value}
+              ];
+            }
+          }
+        }
+        else {
+          // search info in character list this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] 
+          for(var key in this.$store.state.item_ontology_info_list) {
+            var characterInfo = this.$store.state.item_ontology_info_list[key];
+            if(characterInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+              if(characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term == term) {
+                var matchingInfo = characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]];            
+                this.contextMenuData.contextMenuItem = [];
+                this.contextMenuData.contextMenuItem = [
+                  {title: "Search Term:" + matchingInfo.search_term},
+                  {title: "Matching Parent Term:" + matchingInfo.matching_parent_term},
+                  {title: "Matching Term Label:" + matchingInfo.matching_term_label},
+                  {title: "Matching Value:" + matchingInfo.matching_value}
                 ];
               }
             }
           }
         }
-        else {
-                this.items = [];
-        }
-        this.showApproveMenu = false
-        this.x = e.clientX
-        this.y = e.clientY
+        this.contextMenuData.showApproveMenu = false
+        this.contextMenuData.posX = e.clientX
+        this.contextMenuData.posY = e.clientY
         this.$nextTick(() => {
-          this.showApproveMenu = true
+          this.contextMenuData.showApproveMenu = true
         })
       }
       e.preventDefault();
+    },
+    approveItem() {
+      this.contextMenuData.dom.style.color = "dark green";
+      this.contextMenuData.dom = null;
+      this.contextMenuData.showApproveMenu = false;
+    },
+    disapproveItem() {
+      this.contextMenuData.dom.style.color = "orange";
+      this.contextMenuData.dom = null;
+      this.contextMenuData.showApproveMenu = false;
     }
   }
 }
