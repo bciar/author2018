@@ -1,61 +1,175 @@
 {
-    "biological_entity": [
-        {
+    "statements": [
+      {
+        "id": "d0_s0",
+        "notes": null,
+        "provenance": null,
+        "text": "leaf-blade orbicular, 6–10 × 6–10 cm, abaxially densely yellow stellate tomentose or hairy only in vein-axils, adaxially glabrous, lateral-veins 5–6 pairs, extending into 3–5 mm awns, base cordate, sometimes oblique, margin serrate, apex broadly rounded, shortly caudate.",
+        "biologicalEntities": [
+          {
             "character": [
-                {
-                    "src": "d0_s0",
-                    "name": "coloration",
-                    "ontologyid": "http://purl.obolibrary.org/obo/PATO_0000322[red:color/red:1.0];",
-                    "is_modifier": false,
-                    "value": "red"
-                },
-                {
-                    "src": "d0_s0",
-                    "name": "shape",
-                    "is_modifier": false,
-                    "value": "rounded"
-                },
-                {
-                    "unit": "cm",
-                    "src": "d0_s0",
-                    "name": "length",
-                    "value": 3.5
-                },
-                {
-                    "unit": "cm",
-                    "src": "d0_s0",
-                    "name": "length",
-                    "value": 3
-                },
-                {
-                    "unit": "cm",
-                    "src": "d0_s0",
-                    "name": "width",
-                    "value": 4
-                }
+              {
+                "src": "d0_s0",
+                "name": "shape",
+                "value": "orbicular",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0001934[orbicular:circular/orbicular:1.0]"
+              },
+              {
+                "from": "6",
+                "to": "10",
+                "name": "length",
+                "from_unit": "cm",
+                "to_unit": "cm",
+                "src": "d0_s0"
+              },
+              {
+                "from": "6",
+                "to": "10",
+                "name": "width",
+                "from_unit": "cm",
+                "to_unit": "cm",
+                "src": "d0_s0"
+              },
+              {
+                "src": "d0_s0",
+                "name": "pubescence",
+                "value": "stellate",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0002065[stellate:shape/star shaped:1.0]"
+              },
+              {
+                "src": "d0_s0",
+                "name": "pubescence",
+                "value": "tomentose",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0002341[tomentose:hairy/tomentose:1.0]"
+              },
+              {
+                "constraintid": "o1481",
+                "constraint": "in vein-axils",
+                "src": "d0_s0",
+                "name": "pubescence",
+                "value": "hairy",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0000454[hairy:pilosity/hairy:1.0]"
+              },
+              {
+                "modifier": "adaxially",
+                "src": "d0_s0",
+                "name": "pubescence",
+                "value": "glabrous",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0000453[glabrous:pilosity/glabrous:1.0]"
+              }
             ],
             "src": "d0_s0",
-            "name": "blade",
-            "name_original": "blades",
-            "ontologyid": "http://purl.obolibrary.org/obo/PO_0025060[blade:cardinal part of multi-tissue plant structure/laminablade:1.0];",
-            "id": "o0",
+            "name": "leaf-blade",
+            "name_original": "leaf-blade",
+            "id": "o1480",
             "type": "structure"
-        },
-        {
+          },
+          {
+            "character": [],
             "src": "d0_s0",
-            "name": "leaf",
-            "name_original": "leaves",
-            "ontologyid": "http://purl.obolibrary.org/obo/PO_0025034[leaf:phyllome/leaf:1.0];",
-            "id": "o1",
+            "name": "vein-axil",
+            "name_original": "vein-axil",
+            "id": "o1481",
             "type": "structure"
+          },
+          {
+            "character": [
+              {
+                "src": "d0_s0",
+                "char_type": "range_value",
+                "from": "5",
+                "name": "count",
+                "value": "6"
+              }
+            ],
+            "src": "d0_s0",
+            "name": "lateral-vein",
+            "name_original": "lateral-vein",
+            "id": "o1482",
+            "type": "structure"
+          },
+          {
+            "character": [
+              {
+                "src": "d0_s0",
+                "char_type": "range_value",
+                "from": "3",
+                "from_unit": "mm",
+                "name": "size",
+                "value": "5",
+                "to_unit": "mm"
+              }
+            ],
+            "src": "d0_s0",
+            "name": "awn",
+            "name_original": "awns",
+            "id": "o1483",
+            "type": "structure",
+            "ontologyid": "http://purl.obolibrary.org/obo/PATO_0025349[awn:cardinal organ part/awn:1.0]"
+          },
+          {
+            "character": [
+              {
+                "src": "d0_s0",
+                "shape": "cordate",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0000948[cordate:concave 3-D shape/heart shaped:1.0]"
+              },
+              {
+                "src": "d0_s0",
+                "orientation_or_shape": "oblique",
+                "modifier": "sometimes",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0002481[oblique:orientation/oblique orientation:0.5];http://purl.obolibrary.org/obo/PATO_0002513[oblique:position/oblique to:0.5]"
+              }
+            ],
+            "src": "d0_s0",
+            "name": "base",
+            "name_original": "base",
+            "id": "o1484",
+            "type": "structure"
+          },
+          {
+            "character": [
+              {
+                "src": "d0_s0",
+                "architecture_or_shape": "serrate",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0001206[serrate:serration/serrated:1.0]"
+              }
+            ],
+            "src": "d0_s0",
+            "name": "margin",
+            "name_original": "margin",
+            "id": "o1485",
+            "type": "structure"
+          },
+          {
+            "character": [
+              {
+                "src": "d0_s0",
+                "shape": "rounded",
+                "modifier": "broadly"
+              },
+              {
+                "src": "d0_s0",
+                "shape": "caudate",
+                "modifier": "shortly",
+                "ontologyid": "http://purl.obolibrary.org/obo/PATO_0001880[caudate:exserted/caudate:1.0]"
+              }
+            ],
+            "src": "d0_s0",
+            "name": "apex",
+            "name_original": "apex",
+            "id": "o1486",
+            "type": "structure"
+          }
+        ],
+        "relation": {
+          "negation": false,
+          "src": "d0_s0",
+          "name": "extending into",
+          "from": "o1482",
+          "id": "r99",
+          "to": "o1483"
         }
-    ],
-    "relation": {
-        "negation": false,
-        "src": "d0_s0",
-        "name": "part_of",
-        "from": "o0",
-        "id": "r0",
-        "to": "o1"
-    }
-}
+      }
+    ]
+  }

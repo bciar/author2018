@@ -5,7 +5,7 @@
         <taxon-tab ref="taxon_tab"></taxon-tab>
       </v-flex>
     </v-layout>
-    <v-layout fluid fill-height >
+    <v-layout fluid  style="height:calc(100% - 150px)">
       <v-flex xs5 fill-height >
         <v-layout row>
           <v-alert :value="true" outline  type="success" style="height:42px; width:100%">
@@ -16,7 +16,7 @@
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
-            <div style="height:calc(100% - 200px)"  @contextmenu="showMenu">
+            <div style="height:100%"  @contextmenu="showMenu">
               <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
               <v-menu
                 v-model="contextMenuData.showApproveMenu"
@@ -41,7 +41,9 @@
         </v-layout>
       </v-flex>
       <v-flex xs7 fill-height>
-        <table-view ref="table_view"></table-view>
+        <keep-alive>
+          <table-view ref="table_view"></table-view>
+        </keep-alive>
       </v-flex>
     </v-layout>
   </div>
@@ -52,7 +54,7 @@ import Taxon from '@/components/Taxon'
 import DataTable from '@/components/DataTable'
 import { VueEditor } from 'vue2-editor'
 
-import json from '@/json/newResponseJSON.json'
+import json from '@/json/newResponseJson.json'
 import firebase from 'firebase'
 
 
@@ -64,7 +66,6 @@ export default {
       customToolbar: [
         ['bold', 'italic',{'color':[]},{size: [ 'small', false, 'large', 'huge' ]}]
       ],
-      editContent: "",
       contextMenuData: {
         posX: 0,
         posY: 0,
@@ -168,11 +169,10 @@ export default {
 
       var parsecontent = this.editor.getText();
       this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
-        //console.log(response);
         //fetch_result = response.body;
         fetch_result = json;
-        this.$store.state.item_index_list = [];
-        this.$store.state.item_list = [];
+        // this.$store.state.item_index_list = {};
+        // this.$store.state.item_list = [];
         const self = this;
 
         fetch_result.statements.forEach(val => {
@@ -180,7 +180,7 @@ export default {
             const bio = bioVal;
             this.$store.state.ontology_index_list[bioVal.name] = {
               name: bioVal.name,
-              approved: false,
+              approved: null,
               nameOrigin: bioVal.name_original,
               ontology: null
             };
@@ -188,8 +188,8 @@ export default {
             if(bioVal.hasOwnProperty('ontologyid')) {
               this.$store.state.ontology_index_list[bioVal.name].ontology = this.parseOntologyId(bioVal.ontologyid);
             }
-            if(bioVal.hasOwnProperty('characters')) {
-              bioVal.characters.forEach(character => {
+            if(bioVal.hasOwnProperty('character')) {
+              bioVal.character.forEach(character => {
                 var item_string = bio.name + " " + character.name;
                 // parse and store ontology matching info
                 if(character.hasOwnProperty('ontologyid')) {
@@ -215,7 +215,6 @@ export default {
                   }
                 }
                 // check if item exist in table
-
                 if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
                   this.$store.state.item_index_list[item_string] = item_string;                   // save item for index key for future search
                   var item = {
@@ -225,6 +224,7 @@ export default {
                   this.$store.state.item_list.push(item);                                         // add item record ; this will display item in table view
                 } else {
                   this.$store.state.item_list.forEach(item => {
+                    console.log(item);
                     if(item.name == item_string) {
                       item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
                     }
@@ -234,137 +234,123 @@ export default {
             }
           });
         });
-        //-----------------  item bold ----------------------
-        const textContent = this.editor.getText().toLowerCase();
-        // bold each items in editor
-        for(var key in this.$store.state.ontology_index_list) {
-          var index = textContent.search(key);
-          if ( index != -1) {
-            this.editor.formatText(index, key.length, "bold", true);
-            
-            if (this.$store.state.ontology_index_list[key].ontology != null) {
-              if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
-                this.editor.formatText(index, key.length, "color", "green");
-              }
-            }
-          }
-        }
-        
-        for(var key in this.$store.state.item_ontology_info_list) {
-          var characterOntologyInfo = this.$store.state.item_ontology_info_list[key];
-          if (characterOntologyInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
-            if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].hasOwnProperty('matching_value')) {
-              var index = textContent.search(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
-              if ( index != -1) {
-                if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value == 1) {
-                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "green");
-                }
-              }
-            } else {
-              var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
-              var index = this.editor.getText().toLowerCase().search(search_term);
-              if ( index != -1) {
-                var embedOffset = 0;
-                for (var embedKey in this.embedData) {
-                  if( Number(embedKey) < index) {
-                    embedOffset ++;
-                  }
-                }
-                var isExist = 0;
-                for (var embedKey in this.embedData) {
-                  if( this.embedData[embedKey].text_index == index) {
-                    isExist ++;
-                  }
-                }
-                if(isExist == 0) {
-                  var pos = embedOffset + index + search_term.length;
-                  this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
-                  this.embedData[pos.toString()] = {
-                    search_term: search_term,
-                    text_index: index
-                  };
-                }
-                this.editor.update();
-              }
-            }
-          }
-        }
-        this.$refs.table_view.$emit('update');
+        this.$refs.table_view.$forceUpdate();
+        console.log(this.$store.state.item_list);
+        this.setTextStyles();
       });
     },
 
+    setTextStyles() {
+      const textContent = this.editor.getText().toLowerCase();
+      // bold each items in editor
+      for(var key in this.$store.state.ontology_index_list) {
+        var index = textContent.search(key);
+        if ( index != -1) {
+          this.editor.formatText(index, key.length, "bold", true);
+          
+          if (this.$store.state.ontology_index_list[key].ontology != null) {
+            if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
+              this.editor.formatText(index, key.length, "color", "green");
+            }
+          }
+        }
+      }
+      
+      for(var key in this.$store.state.item_ontology_info_list) {
+        var characterOntologyInfo = this.$store.state.item_ontology_info_list[key];
+        if (characterOntologyInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+          if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].hasOwnProperty('matching_value')) {
+            var index = textContent.search(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
+            if ( index != -1) {
+              if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved == null) {
+                if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value == 1) {
+                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "green");
+                }
+              } else {
+                if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved) {
+                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "dark green");
+                } else {
+                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "orange");
+                }
+              }
+            }
+          } else {
+            var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
+            var index = this.editor.getText().toLowerCase().search(search_term);
+            if ( index != -1) {
+              var embedOffset = 0;
+              for (var embedKey in this.embedData) {
+                if( Number(embedKey) < index) {
+                  embedOffset ++;
+                }
+              }
+              var isExist = 0;
+              for (var embedKey in this.embedData) {
+                if( this.embedData[embedKey].text_index == index) {
+                  isExist ++;
+                }
+              }
+              if(isExist == 0) {
+                var pos = embedOffset + index + search_term.length;
+                this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
+                this.embedData[pos.toString()] = {
+                  search_term: search_term,
+                  text_index: index
+                };
+              }
+              this.editor.update();
+            }
+          }
+        }
+      }
+      this.$refs.table_view.$emit('update');
+    },
+
     save_data() {
-      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description').remove();
-      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table').remove();
-      console.log(this.$store.state.tab_list);
-      this.$store.state.tab_list.forEach((tab_item,key) => {
-        firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description/' + this.$store.state.tab_list[key]).set({
-          description: this.$store.state.text_array[key]
-        });
-      });
-
-      this.$store.state.item_list.forEach((item, index) => {
-        Object.keys(item).forEach(key => {
-          var save_item = {};
-          save_item[key] = item[key];
-          firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table/' + item['name'] + '/'+key).set({
-            data: item[key]
-          });
-        })
-      });
-
-      var ontology_index_string = JSON.stringify(this.$store.state.ontology_index_list);
-      firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/indices/' + 'ontology').set({
-        data: ontology_index_string
-      });
-
-      //console.log(JSON.stringify(this.$store.state.ontology_index_list));
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/tab_list').set({data:JSON.stringify(this.$store.state.tab_list)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_list').set({data:JSON.stringify(this.$store.state.item_list)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_ontology_info_list').set({data:JSON.stringify(this.$store.state.item_ontology_info_list)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/json_api_result').set({data:JSON.stringify(this.$store.state.json_api_result)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/text_array').set({data:JSON.stringify(this.$store.state.text_array)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_index_list').set({data:JSON.stringify(this.$store.state.item_index_list)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').set({data:JSON.stringify(this.$store.state.ontology_index_list)});
     },
 
     restore_data () {
       const self = this;
-      var descriptionRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description');
-      descriptionRef.on('value', function(snapshot) {
-          if (snapshot.exists())
-          {
-              // restore data from db to text view
-              self.$store.state.tab_list.length = 0;
-              self.$store.state.text_array.length = 0;
-              var description_json = snapshot.val();
-              Object.keys(description_json).forEach(key => {
-                self.$store.state.tab_list.push(key);
-                self.$store.state.text_array.push(description_json[key].description);
-              });
-              self.$store.state.active_tab = 0;
-          }
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/tab_list').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.tab_list = JSON.parse(snapshot.val().data);
+        }
+      });      
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_list').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.item_list = JSON.parse(snapshot.val().data);
+        }
+      });      
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_ontology_info_list').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.item_ontology_info_list = JSON.parse(snapshot.val().data);
+        }
       });
-
-        // restore data to table
-        var tableRef = firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/table');
-        tableRef.on('value', function(snapshot) {
-            if (snapshot.exists())
-            {
-                self.$store.state.item_index_list = {};
-                self.$store.state.item_list = [];
-                // restore data from db to table
-                var table_json = snapshot.val();
-                //console.log(table_json);
-                Object.keys(table_json).forEach(key => {
-                  self.$store.state.item_index_list[key] = key;
-                  const item = {
-                  }
-                  Object.keys(table_json[key]).forEach(item_key => {
-                    item[item_key] = table_json[key][item_key].data;
-                  });
-                  self.$store.state.item_list.push(item);
-                });
-            }
-        });
-      var ontology_index = firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/indices/' + 'ontology');
-      ontology_index.on('value', function(snapshot) {
-        //console.log(snapshot.val());
-        if(snapshot.val() != null) {
-        self.$store.state.ontology_index_list = JSON.parse(snapshot.val().data);
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/json_api_result').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.json_api_result = JSON.parse(snapshot.val().data);
+        }
+      });
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/text_array').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.text_array = JSON.parse(snapshot.val().data);
+        }
+      });
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_index_list').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.item_index_list = JSON.parse(snapshot.val().data);
+        }
+      });
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.ontology_index_list = JSON.parse(snapshot.val().data);
         }
       });
     },
