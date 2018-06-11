@@ -1,0 +1,67 @@
+{
+    "entries": [
+        {
+            "score": 1,
+            "term": "nucellar epidermis",
+            "parentTerm": "megasporangium exothecium",
+            "resultAnnotations": [
+                {
+                    "property": "http://www.w3.org/2000/01/rdf-schema#label",
+                    "value": "nucellar epidermis"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+                    "value": "珠心 表皮 (Japanese, exact)"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasDbXref",
+                    "value": "Gramene:Anuradha_Pujar"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasSynonymType",
+                    "value": ""
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasDbXref",
+                    "value": "NIG:Yukiko_Yamazaki"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasSynonymType",
+                    "value": ""
+                },
+                {
+                    "property": "http://purl.obolibrary.org/obo/IAO_0000115",
+                    "value": "A portion of plant tissue that is the morphologically distinct outer layer of the nucellus."
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasDbXref",
+                    "value": "POC:Maria_Alejandra_Gandolfo"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#inSubset",
+                    "value": ""
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+                    "value": "epidermis nucelar (Spanish, exact)"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#inSubset",
+                    "value": ""
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace",
+                    "value": "plant_anatomy"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+                    "value": "portion of nucellar epidermis (exact)"
+                },
+                {
+                    "property": "http://www.geneontology.org/formats/oboInOwl#id",
+                    "value": "PO:0008006"
+                }
+            ]
+        }
+    ]
+}

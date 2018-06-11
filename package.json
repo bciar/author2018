@@ -15,6 +15,7 @@
     "bootstrap": "^4.0.0",
     "firebase": "^4.10.1",
     "jquery": "^3.3.1",
+    "parchment": "^1.1.4",
     "particlesjs": "^2.2.1",
     "popper.js": "^1.14.3",
     "require": "^2.4.20",

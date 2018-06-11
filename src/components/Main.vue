@@ -19,22 +19,44 @@
             <div style="height:100%"  @contextmenu="showMenu">
               <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
               <v-menu
-                v-model="contextMenuData.showApproveMenu"
-                :position-x="contextMenuData.posX"
-                :position-y="contextMenuData.posY"
+                v-model="approveMenu.show"
+                :position-x="approveMenu.posX"
+                :position-y="approveMenu.posY"
                 offset-y
                 absolute
               >
-              <v-list>
-                <v-list-tile v-for="(item, index) in contextMenuData.contextMenuItem" :key="index">
-                  <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-                </v-list-tile>
-                <v-list-tile :key="-1">
-                  <v-btn v-on:click.stop="approveItem()">Approve</v-btn>
-                  <v-btn v-on:click.stop="disapproveItem()">Disapprove</v-btn>
-                </v-list-tile>
-              </v-list>
-            </v-menu>
+                <v-list>
+                  <v-list-tile v-for="(item, index) in approveMenu.menuItem" :key="index">
+                    <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile :key="-1">
+                    <v-btn v-on:click.stop="approveItem()">Approve</v-btn>
+                    <v-btn v-on:click.stop="disapproveItem()">Disapprove</v-btn>
+                  </v-list-tile>
+                </v-list>
+              </v-menu>
+              <v-menu
+                v-model="searchMenu.show"
+                :position-x="searchMenu.posX"
+                :position-y="searchMenu.posY"
+                offset-y
+                absolute
+              >
+                <v-list>
+                  <v-list-tile :key="-3">
+                    <v-list-tile-title>Search:{{ searchMenu.search_term }}</v-list-tile-title>
+                  </v-list-tile>
+                  <v-list-tile v-if="searchMenu.searching_icon" :key="-2" align-center>
+                    <img src="/static/loading.gif" style="width:50px;height:50px">
+                  </v-list-tile>
+                  <v-list-tile v-for="(item, index) in searchMenu.menuItem" :key="index" v-on:click.stop="setSearchValue(item.title)">
+                    <v-list-tile-content>{{ item.title }}</v-list-tile-content>
+                  </v-list-tile>
+                  <v-list-tile :key="-1">
+                    <v-btn v-on:click.stop="newTerm()">New term</v-btn>
+                  </v-list-tile>
+                </v-list>
+              </v-menu>
             </div>
             
           </v-flex>
@@ -55,8 +77,9 @@ import DataTable from '@/components/DataTable'
 import { VueEditor } from 'vue2-editor'
 
 import json from '@/json/newResponseJson.json'
+import searchJson from '@/json/searchDummy.json'
 import firebase from 'firebase'
-
+import Parchment from 'parchment'
 
 
 export default {
@@ -66,11 +89,21 @@ export default {
       customToolbar: [
         ['bold', 'italic',{'color':[]},{size: [ 'small', false, 'large', 'huge' ]}]
       ],
-      contextMenuData: {
+      approveMenu: {
         posX: 0,
         posY: 0,
-        showApproveMenu: false,
-        contextMenuItem: [],
+        show: false,
+        menuItem: [],
+        dom: null
+      },
+      searchMenu: {
+        search_term: "",
+        searching_icon: true,
+        quizInfo: null,
+        posX: 0,
+        posY: 0,
+        show: false,
+        menuItem: [],
         dom: null
       },
       editor: null,
@@ -276,6 +309,8 @@ export default {
             }
           } else {
             var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
+            var parent_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_parent_term;
+            //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
             var index = this.editor.getText().toLowerCase().search(search_term);
             if ( index != -1) {
               var embedOffset = 0;
@@ -292,10 +327,12 @@ export default {
               }
               if(isExist == 0) {
                 var pos = embedOffset + index + search_term.length;
-                this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
+                var delta = this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
                 this.embedData[pos.toString()] = {
                   search_term: search_term,
-                  text_index: index
+                  parent_term: parent_term,
+                  text_index: index,
+                  delta: delta
                 };
               }
               this.editor.update();
@@ -355,60 +392,95 @@ export default {
       });
     },
     showMenu (e) {
-      if (e.srcElement.style.color == "green") {
-        var term = e.srcElement.textContent.toLowerCase();
-        this.contextMenuData.dom = e.srcElement;
-        if (e.srcElement.tagName == "STRONG") {
-          // search info in ontology list
-          if(this.$store.state.ontology_index_list.hasOwnProperty(term)) {
-            if (this.$store.state.ontology_index_list[term].ontology.search_term == term) {
-              var matchingInfo = this.$store.state.ontology_index_list[term].ontology;
-              this.contextMenuData.contextMenuItem = [];
-              this.contextMenuData.contextMenuItem = [
-                {title: "Search Term:" + this.$store.state.ontology_index_list[term].ontology.search_term},
-                {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[term].ontology.matching_parent_term},
-                {title: "Matching Term Label:" + this.$store.state.ontology_index_list[term].ontology.matching_term_label},
-                {title: "Matching Value:" + this.$store.state.ontology_index_list[term].ontology.matching_value}
-              ];
-            }
-          }
-        }
-        else {
-          // search info in character list this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] 
-          for(var key in this.$store.state.item_ontology_info_list) {
-            var characterInfo = this.$store.state.item_ontology_info_list[key];
-            if(characterInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
-              if(characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term == term) {
-                var matchingInfo = characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]];            
-                this.contextMenuData.contextMenuItem = [];
-                this.contextMenuData.contextMenuItem = [
-                  {title: "Search Term:" + matchingInfo.search_term},
-                  {title: "Matching Parent Term:" + matchingInfo.matching_parent_term},
-                  {title: "Matching Term Label:" + matchingInfo.matching_term_label},
-                  {title: "Matching Value:" + matchingInfo.matching_value}
+      console.log(e);
+      if (e.srcElement.tagName == "IMG") {
+        console.log(this.editor);
+          var img = Parchment.find(e.target);
+          var imgIndex = this.editor.getIndex(img);
+          var quizData = this.embedData[imgIndex];
+          this.searchMenu.quizInfo = quizData;
+          console.log(quizData);
+          this.searchMenu.search_term = quizData.search_term;
+          this.searchMenu.show = false
+          this.searchMenu.posX = e.clientX
+          this.searchMenu.posY = e.clientY
+          this.$nextTick(() => {
+            this.searchMenu.show = true            
+            this.$http.get('http://shark.sbs.arizona.edu:8080/CAREX/search?term='+encodeURI(quizData.search_term)).then(response => {
+              console.log(response);
+              this.searchMenu.searching_icon = false;
+              var result = searchJson.entries[0];
+              result.resultAnnotations.forEach(val => {
+                this.searchMenu.menuItem.push({title:val.value});
+              })
+              
+            });
+          });
+      } else {
+        if (e.srcElement.style.color == "green") {
+          var term = e.srcElement.textContent.toLowerCase();
+          this.approveMenu.dom = e.srcElement;
+          if (e.srcElement.tagName == "STRONG") {
+            // search info in ontology list
+            if(this.$store.state.ontology_index_list.hasOwnProperty(term)) {
+              if (this.$store.state.ontology_index_list[term].ontology.search_term == term) {
+                var matchingInfo = this.$store.state.ontology_index_list[term].ontology;
+                this.approveMenu.menuItem = [];
+                this.approveMenu.menuItem = [
+                  {title: "Search Term:" + this.$store.state.ontology_index_list[term].ontology.search_term},
+                  {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[term].ontology.matching_parent_term},
+                  {title: "Matching Term Label:" + this.$store.state.ontology_index_list[term].ontology.matching_term_label},
+                  {title: "Matching Value:" + this.$store.state.ontology_index_list[term].ontology.matching_value}
                 ];
               }
             }
           }
+          else {
+            // search info in character list this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] 
+            for(var key in this.$store.state.item_ontology_info_list) {
+              var characterInfo = this.$store.state.item_ontology_info_list[key];
+              if(characterInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+                if(characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term == term) {
+                  var matchingInfo = characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]];            
+                  this.approveMenu.menuItem = [];
+                  this.approveMenu.menuItem = [
+                    {title: "Search Term:" + matchingInfo.search_term},
+                    {title: "Matching Parent Term:" + matchingInfo.matching_parent_term},
+                    {title: "Matching Term Label:" + matchingInfo.matching_term_label},
+                    {title: "Matching Value:" + matchingInfo.matching_value}
+                  ];
+                }
+              }
+            }
+          }
+          this.approveMenu.show = false
+          this.approveMenu.posX = e.clientX
+          this.approveMenu.posY = e.clientY
+          this.$nextTick(() => {
+            this.approveMenu.show = true
+          });
         }
-        this.contextMenuData.showApproveMenu = false
-        this.contextMenuData.posX = e.clientX
-        this.contextMenuData.posY = e.clientY
-        this.$nextTick(() => {
-          this.contextMenuData.showApproveMenu = true
-        })
       }
       e.preventDefault();
     },
     approveItem() {
-      this.contextMenuData.dom.style.color = "dark green";
-      this.contextMenuData.dom = null;
-      this.contextMenuData.showApproveMenu = false;
+      this.approveMenu.dom.style.color = "dark green";
+      this.approveMenu.dom = null;
+      this.approveMenu.show = false;
     },
     disapproveItem() {
-      this.contextMenuData.dom.style.color = "orange";
-      this.contextMenuData.dom = null;
-      this.contextMenuData.showApproveMenu = false;
+      this.approveMenu.dom.style.color = "orange";
+      this.approveMenu.dom = null;
+      this.approveMenu.show = false;
+    },
+    newTerm () {
+      console.log("new Term");
+    },
+    setSearchValue (val) {
+      console.log(val);
+      console.log(this.searchMenu.quizInfo);
+      this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);
+      this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'green'});
     }
   }
 }
