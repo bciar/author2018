@@ -59,7 +59,14 @@
                 </v-list>
               </v-menu>
             </div>
-            
+            <v-snackbar
+              :timeout="3000"
+              :top="true"
+              v-model="snackbar"
+            >
+              Saved successfully
+              <v-btn flat color="pink" @click.native="snackbar = false">Close</v-btn>
+            </v-snackbar>
             <v-dialog v-model="submitDlg.show" max-width="500px">
               <v-card>
                 <v-card-title>
@@ -139,6 +146,7 @@ export default {
         relatedTaxon: "",
         quizInfo: null,
       },
+      snackbar: false,
       editor: null,
       embedData: {}
     }
@@ -391,7 +399,8 @@ export default {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_index_list').set({data:JSON.stringify(this.$store.state.item_index_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').set({data:JSON.stringify(this.$store.state.ontology_index_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/embeds_data').set({data:JSON.stringify(this.$store.state.embeds_data)});
-      alert('Successfully saved');
+      //alert('Successfully saved');
+      this.snackbar = true;
     },
 
     restore_data () {
