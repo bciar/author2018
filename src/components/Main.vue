@@ -344,7 +344,7 @@ export default {
                 }
               } else {
                 if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved) {
-                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "dark green");
+                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "darkgreen");
                 } else {
                   this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "orange");
                 }
@@ -524,7 +524,7 @@ export default {
       e.preventDefault();
     },
     approveItem() {
-      this.approveMenu.dom.style.color = "dark green";
+      this.approveMenu.dom.style.color = "darkgreen";
       this.approveMenu.dom = null;
       this.approveMenu.show = false;
     },
