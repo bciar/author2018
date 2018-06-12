@@ -1,14 +1,14 @@
 <template>
   <v-data-table
-    :headers="headers"
-    :items="desserts"
+    :headers="headers_array"
+    :items="item_array"
     hide-actions
     class="elevation-1"
      ref="table_node"
      id="table_viewID"
   >
     <template slot="items" slot-scope="props">
-      <td contenteditable="true" v-for="(key) in headers" :key="key.value" class="text-xs-left" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])">
+      <td contenteditable="true" v-for="(key) in headers_array" :key="key.value" class="text-xs-left" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])">
         <v-tooltip bottom>
           <span slot="activator">{{ props.item[key.value] }}</span>
         <span>{{ props.item[key.value] }}</span>
@@ -30,30 +30,26 @@ export default {
     name: 'DataTable',
     data () {
         return {
-          text: "Hello World!"
+          text: "Hello World!",
+          headers_array: [],
+          item_array: [],
         }
-    },
-    computed: {
-        headers: function() {
-            var header = [{text:"Name",value:"name",sortable:false}];
-            this.$store.state.tab_list.forEach(val => {
-                var data = {
-                    text: val,
-                    value: val,
-                    sortable: false,
-                };
-                header.push(data);
-            });
-            return header;
-        },
-        desserts: function() {
-          return this.$store.state.item_list;
-        }
-    },
-    components: {
-      
     },
     methods: {
+      refreshTable () {
+        var header = [{text:"Name",value:"name",sortable:false}];
+        this.$store.state.tab_list.forEach(val => {
+            var data = {
+                text: val,
+                value: val,
+                sortable: false,
+            };
+            header.push(data);
+        });
+        this.headers_array = header;
+        this.item_array = this.$store.state.item_list;
+      },
+
       highlight_word(searchText) {
         if (!searchText) {
             // Throw error here if you want...

@@ -17,7 +17,8 @@
         <v-layout xs12 fill-height>
           <v-flex xs12>
             <div style="height:100%"  @contextmenu="showMenu">
-              <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID"></rich-text>
+              <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :disabled="$store.state.active_tab == -1" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID" placeholder="Please select Tab and Edit description">
+              </rich-text>
               <v-menu
                 v-model="approveMenu.show"
                 :position-x="approveMenu.posX"
@@ -59,6 +60,27 @@
               </v-menu>
             </div>
             
+            <v-dialog v-model="submitDlg.show" max-width="500px">
+              <v-card>
+                <v-card-title>
+                  Submit
+                </v-card-title>
+                <v-card-text>
+                  <v-text-field v-model="submitDlg.term" placeholder="Input Term Name"></v-text-field>
+                  <v-text-field v-model="submitDlg.parentTerm" placeholder="Input Parent Term Name"></v-text-field>
+                  <v-text-field v-model="submitDlg.definition" placeholder="Input Definition"></v-text-field>
+                  <v-text-field v-model="submitDlg.author" placeholder="Input Author Name"></v-text-field>
+                  <v-text-field v-model="submitDlg.relatedTaxon" placeholder="Input Related Taxon"></v-text-field>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                  <v-btn color="primary" flat @click.stop="Submit()">Submit</v-btn>
+                  <v-btn color="primary" flat @click.stop="submitDlg.show = false">Cancel</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+
+
           </v-flex>
         </v-layout>
       </v-flex>
@@ -108,6 +130,15 @@ export default {
         menuItem: [],
         dom: null
       },
+      submitDlg: {
+        show: false,
+        term: "",
+        parentTerm: "",
+        definition: "",
+        author: "",
+        relatedTaxon: "",
+        quizInfo: null,
+      },
       editor: null,
       embedData: {}
     }
@@ -126,6 +157,11 @@ export default {
           self.$refs.table_view.highlight_word(highlight_str);
         }
     });
+    if (this.$store.state.active_tab == -1) {
+      //this.editor.enable(false);
+    }
+    self.$refs.table_view.refreshTable();
+
   },
   components: {
     "taxon-tab" : Taxon,
@@ -201,9 +237,6 @@ export default {
     matricize () {
       var fetch_result;
       // there should fetch function; result will be retrieved to fetch result
-
-        console.log('before matricize');
-        console.log(this.$store.state.item_ontology_info_list);
       var parsecontent = this.editor.getText();
       this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
         //fetch_result = response.body;
@@ -270,10 +303,8 @@ export default {
             }
           });
         });
-        this.$refs.table_view.$forceUpdate();
+        this.$refs.table_view.refreshTable();
         this.setTextStyles();
-        console.log('matricize');
-        console.log(this.$store.state.item_ontology_info_list);
       });
     },
 
@@ -348,8 +379,7 @@ export default {
           }
         }
       }
-      this.$refs.table_view.$emit('update');
-      console.log(this.$store.state.embeds_data);
+      this.$refs.table_view.refreshTable();
     },
 
     save_data() {
@@ -360,6 +390,8 @@ export default {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/text_array').set({data:JSON.stringify(this.$store.state.text_array)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_index_list').set({data:JSON.stringify(this.$store.state.item_index_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').set({data:JSON.stringify(this.$store.state.ontology_index_list)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/embeds_data').set({data:JSON.stringify(this.$store.state.embeds_data)});
+      alert('Successfully saved');
     },
 
     restore_data () {
@@ -397,6 +429,12 @@ export default {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').on('value',function(snapshot) {
         if(snapshot.exists()) {
           self.$store.state.ontology_index_list = JSON.parse(snapshot.val().data);
+        }
+      });
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/embeds_data').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.embeds_data = JSON.parse(snapshot.val().data);
+    self.$refs.table_view.refreshTable();
         }
       });
     },
@@ -488,10 +526,13 @@ export default {
     },
     newTerm () {
       console.log("new Term");
+      this.searchMenu.show = false;
+      this.submitDlg.term = this.searchMenu.search_term;
+      this.submitDlg.author = firebase.auth().currentUser.email;
+      this.submitDlg.show = true;
     },
     setSearchValue (val) {
       // exchange text value
-      console.log(this.searchMenu.quizInfo.text_index);
       this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);      // +1 : delete embed icon
       var deltaPos = val.length - this.searchMenu.search_term.length - 1;
       this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'green'});
@@ -524,8 +565,6 @@ export default {
         }
       }
 
-      console.log(this.$store.state.item_ontology_info_list);
-      console.log(this.searchMenu.search_term);
       if (this.$store.state.item_ontology_info_list.hasOwnProperty(this.searchMenu.quizInfo.item_key)) {
         //delete this.$store.state.item_ontology_info_list[this.searchMenu.search_term][this.$store.state.tab_list[this.$store.state.active_tab]];
         if (this.$store.state.item_ontology_info_list[this.searchMenu.quizInfo.item_key].hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
@@ -535,17 +574,15 @@ export default {
             matching_parent_label: '',
             matching_value: this.searchMenu.score
           };
-          console.log(this.searchMenu.quizInfo.item_key);
           this.$store.state.item_ontology_info_list[this.searchMenu.quizInfo.item_key][this.$store.state.tab_list[this.$store.state.active_tab]] = ontologyInfo;
           this.$store.state.item_list.forEach(item => {
             if(item.name == this.searchMenu.quizInfo.item_key) {
               item[this.$store.state.tab_list[this.$store.state.active_tab]] = val;
             }
           });
-          console.log(this.$store.state.item_list);
-            //[this.searchMenu.quizInfo.item_key][this.$store.state.tab_list[this.$store.state.active_tab]] = val;
         }
       }
+      this.$refs.table_view.refreshTable();
     }
   }
 }
