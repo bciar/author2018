@@ -98,6 +98,8 @@ export default {
       },
       searchMenu: {
         search_term: "",
+        parent: "",
+        score: "",
         searching_icon: true,
         quizInfo: null,
         posX: 0,
@@ -200,6 +202,8 @@ export default {
       var fetch_result;
       // there should fetch function; result will be retrieved to fetch result
 
+        console.log('before matricize');
+        console.log(this.$store.state.item_ontology_info_list);
       var parsecontent = this.editor.getText();
       this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
         //fetch_result = response.body;
@@ -226,23 +230,23 @@ export default {
                 var item_string = bio.name + " " + character.name;
                 // parse and store ontology matching info
                 if(character.hasOwnProperty('ontologyid')) {
-                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(character.name)) {
+                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(item_string)) {
                     var item = {};
                     item[this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
-                    this.$store.state.item_ontology_info_list[character.name] = item;
+                    this.$store.state.item_ontology_info_list[item_string] = item;
                   } else {
-                    this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
+                    this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
                   }
                 } else {
-                  // this.$store.state.item_ontology_info_list[character.name] = null;
-                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(character.name)) {
+                  // this.$store.state.item_ontology_info_list[item_string] = null;
+                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(item_string)) {
                     var item = {};
                     item[this.$store.state.tab_list[this.$store.state.active_tab]] = {
                       search_term: character.value
                     };
-                    this.$store.state.item_ontology_info_list[character.name] = item;
+                    this.$store.state.item_ontology_info_list[item_string] = item;
                   } else {
-                    this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] = {
+                    this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]] = {
                       search_term: character.value
                     };
                   }
@@ -257,7 +261,6 @@ export default {
                   this.$store.state.item_list.push(item);                                         // add item record ; this will display item in table view
                 } else {
                   this.$store.state.item_list.forEach(item => {
-                    console.log(item);
                     if(item.name == item_string) {
                       item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
                     }
@@ -268,8 +271,9 @@ export default {
           });
         });
         this.$refs.table_view.$forceUpdate();
-        console.log(this.$store.state.item_list);
         this.setTextStyles();
+        console.log('matricize');
+        console.log(this.$store.state.item_ontology_info_list);
       });
     },
 
@@ -314,25 +318,29 @@ export default {
             var index = this.editor.getText().toLowerCase().search(search_term);
             if ( index != -1) {
               var embedOffset = 0;
-              for (var embedKey in this.embedData) {
-                if( Number(embedKey) < index) {
+              for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+                if( embedKey != 'undefined' && Number(embedKey) < index) {
                   embedOffset ++;
                 }
               }
               var isExist = 0;
-              for (var embedKey in this.embedData) {
-                if( this.embedData[embedKey].text_index == index) {
+              for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+                if( embedKey != 'undefined' && this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][embedKey].text_index == index) {
                   isExist ++;
                 }
               }
               if(isExist == 0) {
                 var pos = embedOffset + index + search_term.length;
                 var delta = this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
-                this.embedData[pos.toString()] = {
+                if (!this.$store.state.embeds_data.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+                  this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]] = {};
+                }
+                this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][pos.toString()] = {
                   search_term: search_term,
                   parent_term: parent_term,
                   text_index: index,
-                  delta: delta
+                  delta: delta,
+                  item_key: key
                 };
               }
               this.editor.update();
@@ -341,6 +349,7 @@ export default {
         }
       }
       this.$refs.table_view.$emit('update');
+      console.log(this.$store.state.embeds_data);
     },
 
     save_data() {
@@ -392,14 +401,16 @@ export default {
       });
     },
     showMenu (e) {
-      console.log(e);
+      //console.log(e);
       if (e.srcElement.tagName == "IMG") {
-        console.log(this.editor);
+        //console.log(this.editor);
           var img = Parchment.find(e.target);
           var imgIndex = this.editor.getIndex(img);
-          var quizData = this.embedData[imgIndex];
+          console.log(imgIndex);
+          var quizData = this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][imgIndex];
           this.searchMenu.quizInfo = quizData;
-          console.log(quizData);
+          this.searchMenu.embedIndex = imgIndex;
+          //console.log(quizData);
           this.searchMenu.search_term = quizData.search_term;
           this.searchMenu.show = false
           this.searchMenu.posX = e.clientX
@@ -407,9 +418,11 @@ export default {
           this.$nextTick(() => {
             this.searchMenu.show = true            
             this.$http.get('http://shark.sbs.arizona.edu:8080/CAREX/search?term='+encodeURI(quizData.search_term)).then(response => {
-              console.log(response);
+              //console.log(response);
               this.searchMenu.searching_icon = false;
               var result = searchJson.entries[0];
+              this.searchMenu.parent = result.parentTerm;
+              this.searchMenu.score = result.score;
               result.resultAnnotations.forEach(val => {
                 this.searchMenu.menuItem.push({title:val.value});
               })
@@ -436,7 +449,7 @@ export default {
             }
           }
           else {
-            // search info in character list this.$store.state.item_ontology_info_list[character.name][this.$store.state.tab_list[this.$store.state.active_tab]] 
+            // search info in character list this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]] 
             for(var key in this.$store.state.item_ontology_info_list) {
               var characterInfo = this.$store.state.item_ontology_info_list[key];
               if(characterInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
@@ -477,10 +490,61 @@ export default {
       console.log("new Term");
     },
     setSearchValue (val) {
-      console.log(val);
-      console.log(this.searchMenu.quizInfo);
-      this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);
+      // exchange text value
+      this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);      // +1 : delete embed icon
+      var deltaPos = val.length - this.searchMenu.search_term.length - 1;
       this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'green'});
+
+      // delete embed info
+      delete this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][this.searchMenu.embedIndex];
+
+      // if origin value and new value has different length , increase index of index of embeds after indicated embeds
+      if (this.$store.state.embeds_data.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+        var embeds = this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]];
+        for(var key in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+          if ( Number(key) > this.searchMenu.embedIndex) {
+            var tmp = this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][key];
+            delete this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][key];
+            var new_key = String(Number(key) + deltaPos);
+            this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][new_key] = tmp;
+            this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][new_key].text_index += deltaPos;
+          }
+        }
+      }
+
+      for(var key in this.$store.state.item_ontology_info_list) {
+        var characterOntologyInfo = this.$store.state.item_ontology_info_list[key];
+        if (characterOntologyInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+          if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term == this.searchMenu.search_term) {
+            characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term = val;
+            characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_parent_term = this.searchMenu.parent;
+            characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value = val;
+          }
+        }
+      }
+
+      console.log(this.$store.state.item_ontology_info_list);
+      console.log(this.searchMenu.search_term);
+      if (this.$store.state.item_ontology_info_list.hasOwnProperty(this.searchMenu.quizInfo.item_key)) {
+        //delete this.$store.state.item_ontology_info_list[this.searchMenu.search_term][this.$store.state.tab_list[this.$store.state.active_tab]];
+        if (this.$store.state.item_ontology_info_list[this.searchMenu.quizInfo.item_key].hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+          var ontologyInfo = {
+            search_term: val,
+            matching_parent_term: this.searchMenu.parent,
+            matching_parent_label: '',
+            matching_value: this.searchMenu.score
+          };
+          console.log(this.searchMenu.quizInfo.item_key);
+          this.$store.state.item_ontology_info_list[this.searchMenu.quizInfo.item_key][this.$store.state.tab_list[this.$store.state.active_tab]] = ontologyInfo;
+          this.$store.state.item_list.forEach(item => {
+            if(item.name == this.searchMenu.quizInfo.item_key) {
+              item[this.$store.state.tab_list[this.$store.state.active_tab]] = val;
+            }
+          });
+          console.log(this.$store.state.item_list);
+            //[this.searchMenu.quizInfo.item_key][this.$store.state.tab_list[this.$store.state.active_tab]] = val;
+        }
+      }
     }
   }
 }

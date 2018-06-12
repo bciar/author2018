@@ -27,6 +27,8 @@ export const store = new Vuex.Store({
 
 		table_highlights: [],		// list of highlights in table
 
-		editor_highlights: []		// list of highlights in editor
+		editor_highlights: [],		// list of highlights in editor
+
+		embeds_data: {}				// list of json in editor
 	}
 });
