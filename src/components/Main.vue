@@ -591,6 +591,7 @@ export default {
           });
         }
       }
+      this.searchMenu.show = false;
       this.$refs.table_view.refreshTable();
     }
   }
