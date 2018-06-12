@@ -491,6 +491,7 @@ export default {
     },
     setSearchValue (val) {
       // exchange text value
+      console.log(this.searchMenu.quizInfo.text_index);
       this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);      // +1 : delete embed icon
       var deltaPos = val.length - this.searchMenu.search_term.length - 1;
       this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'green'});
@@ -507,7 +508,7 @@ export default {
             delete this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][key];
             var new_key = String(Number(key) + deltaPos);
             this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][new_key] = tmp;
-            this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][new_key].text_index += deltaPos;
+            this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][new_key].text_index += deltaPos + 1;
           }
         }
       }
