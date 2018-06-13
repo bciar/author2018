@@ -54,19 +54,21 @@
                     <v-list-tile-content>{{ item.title }}</v-list-tile-content>
                   </v-list-tile>
                   <v-list-tile :key="-1">
-                    <v-btn v-on:click.stop="newTerm()">New term</v-btn>
+                    <v-btn v-on:click.stop="newTermDlg()">New term</v-btn>
                   </v-list-tile>
                 </v-list>
               </v-menu>
             </div>
+            
             <v-snackbar
               :timeout="3000"
               :top="true"
-              v-model="snackbar"
+              v-model="snackbar.show"
             >
-              Saved successfully
-              <v-btn flat color="pink" @click.native="snackbar = false">Close</v-btn>
+              {{snackbar.msg}}
+              <v-btn flat color="pink" @click.native="snackbar.show = false">Close</v-btn>
             </v-snackbar>
+
             <v-dialog v-model="submitDlg.show" max-width="500px">
               <v-card>
                 <v-card-title>
@@ -76,12 +78,13 @@
                   <v-text-field v-model="submitDlg.term" placeholder="Input Term Name"></v-text-field>
                   <v-text-field v-model="submitDlg.parentTerm" placeholder="Input Parent Term Name"></v-text-field>
                   <v-text-field v-model="submitDlg.definition" placeholder="Input Definition"></v-text-field>
+                  <v-text-field v-model="submitDlg.sentence" placeholder="Input Sentence"></v-text-field>
                   <v-text-field v-model="submitDlg.author" placeholder="Input Author Name"></v-text-field>
                   <v-text-field v-model="submitDlg.relatedTaxon" placeholder="Input Related Taxon"></v-text-field>
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                  <v-btn color="primary" flat @click.stop="Submit()">Submit</v-btn>
+                  <v-btn color="primary" flat @click.stop="submitTerm()">Submit</v-btn>
                   <v-btn color="primary" flat @click.stop="submitDlg.show = false">Cancel</v-btn>
                 </v-card-actions>
               </v-card>
@@ -142,11 +145,15 @@ export default {
         term: "",
         parentTerm: "",
         definition: "",
+        sentence: "",
         author: "",
         relatedTaxon: "",
         quizInfo: null,
       },
-      snackbar: false,
+      snackbar: {
+        show: false,
+        msg: ""
+      },
       editor: null,
       embedData: {}
     }
@@ -318,6 +325,20 @@ export default {
 
     setTextStyles() {
       const textContent = this.editor.getText().toLowerCase();
+
+      // delete all embeds before matricize
+      var cells = document.getElementsByTagName("img");
+      var embed_cnt = 0;
+      for (var i = cells.length - 1; i >= 0 ; i --) {
+        if( cells[i].outerHTML == '<img src="/static/quiz_mark.jpg">') {
+          var embed_to_delete = Parchment.find(cells[i]);
+          var imgIndex = this.editor.getIndex(embed_to_delete);
+          this.editor.deleteText(imgIndex, 1);
+          embed_cnt ++;
+        }
+      }
+      this.$store.state.embeds_data = {};
+
       // bold each items in editor
       for(var key in this.$store.state.ontology_index_list) {
         var index = textContent.search(key);
@@ -326,7 +347,7 @@ export default {
           
           if (this.$store.state.ontology_index_list[key].ontology != null) {
             if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
-              this.editor.formatText(index, key.length, "color", "green");
+              this.editor.formatText(index, key.length, "color", "lightgreen");
             }
           }
         }
@@ -340,7 +361,7 @@ export default {
             if ( index != -1) {
               if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved == null) {
                 if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value == 1) {
-                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "green");
+                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "lightgreen");
                 }
               } else {
                 if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved) {
@@ -400,7 +421,8 @@ export default {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').set({data:JSON.stringify(this.$store.state.ontology_index_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/embeds_data').set({data:JSON.stringify(this.$store.state.embeds_data)});
       //alert('Successfully saved');
-      this.snackbar = true;
+      this.snackbar.msg = "Saved successfully";
+      this.snackbar.show = true;
     },
 
     restore_data () {
@@ -452,19 +474,41 @@ export default {
       if (e.srcElement.tagName == "IMG") {
         //console.log(this.editor);
           var img = Parchment.find(e.target);
+          console.log(img);
           var imgIndex = this.editor.getIndex(img);
           console.log(imgIndex);
           var quizData = this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][imgIndex];
-          this.searchMenu.quizInfo = quizData;
+          console.log(quizData);
+          if (quizData != undefined) {
+            this.searchMenu.quizInfo = quizData;
+            this.searchMenu.search_term = quizData.search_term;
+          } else {
+            var prevNodeTxt = img.prev.text;
+            var searchTerm = prevNodeTxt.substring(prevNodeTxt.lastIndexOf(' '), prevNodeTxt.length);
+            console.log(img.prev);
+                // this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][pos.toString()] = {
+                  // search_term: search_term,
+                  // parent_term: parent_term,
+                  // text_index: index,
+                  // delta: delta,
+                  // item_key: key
+                // };
+            this.searchMenu.quizInfo = {
+              search_term: searchTerm,
+              parent_term: "",
+              text_index: this.editor.getIndex(img.prev) + prevNodeTxt.lastIndexOf(' '),
+              delta: img,
+            };
+            this.searchMenu.search_term = searchTerm;
+          }
           this.searchMenu.embedIndex = imgIndex;
           //console.log(quizData);
-          this.searchMenu.search_term = quizData.search_term;
           this.searchMenu.show = false
           this.searchMenu.posX = e.clientX
           this.searchMenu.posY = e.clientY
           this.$nextTick(() => {
             this.searchMenu.show = true            
-            this.$http.get('http://shark.sbs.arizona.edu:8080/CAREX/search?term='+encodeURI(quizData.search_term)).then(response => {
+            this.$http.get('http://shark.sbs.arizona.edu:8080/CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
               //console.log(response);
               this.searchMenu.searching_icon = false;
               var result = searchJson.entries[0];
@@ -477,7 +521,7 @@ export default {
             });
           });
       } else {
-        if (e.srcElement.style.color == "green") {
+        if (e.srcElement.style.color == "lightgreen") {
           var term = e.srcElement.textContent.toLowerCase();
           this.approveMenu.dom = e.srcElement;
           if (e.srcElement.tagName == "STRONG") {
@@ -533,18 +577,39 @@ export default {
       this.approveMenu.dom = null;
       this.approveMenu.show = false;
     },
-    newTerm () {
+    newTermDlg () {
       console.log("new Term");
       this.searchMenu.show = false;
       this.submitDlg.term = this.searchMenu.search_term;
       this.submitDlg.author = firebase.auth().currentUser.email;
       this.submitDlg.show = true;
     },
+    submitTerm() {
+      if (this.submitDlg.term == "" || this.submitDlg.author == "" || this.submitDlg.definition == "" || this.submitDlg.sentence == "") {
+        this.snackbar.msg = "Input valid values!";
+        this.snackbar.show = true;
+        return;
+      }
+      var termData = {
+        term: this.submitDlg.term,
+        parentTerm: this.submitDlg.parentterm,
+        definition: this.submitDlg.definition,
+        setence: this.submitDlg.sentence,
+        author: this.submitDlg.author,
+        relatedTaxon: this.submitDlg.relatedTaxon,
+        submissionTime: Date.now()
+      }
+      this.$http.post('http://shark.sbs.arizona.edu:8080/submit',termData).then((response) => {
+        console.log(response);
+        this.snackbar.msg = "Submitted successfully";
+        this.snackbar.show = true;
+      });
+    },
     setSearchValue (val) {
       // exchange text value
       this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);      // +1 : delete embed icon
       var deltaPos = val.length - this.searchMenu.search_term.length - 1;
-      this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'green'});
+      this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'lightgreen'});
 
       // delete embed info
       delete this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][this.searchMenu.embedIndex];
