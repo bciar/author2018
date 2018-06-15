@@ -62,6 +62,8 @@ export default {
             if (this.current_index == -1) {
                 this.$store.state.tab_list.push(this.new_name);
                 this.$store.state.text_array.push("");
+                
+                this.$parent.logActivity(1,'New Name:'+this.new_name);
 
             } else {
                 var oldName = this.$store.state.tab_list[this.current_index];
@@ -77,7 +79,8 @@ export default {
                     var oldTabEmbeds = this.$store.state.embeds_data[oldName];
                     delete this.$store.state.embeds_data[oldName];
                     this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
-                }
+                }                
+                this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
             }
             this.editDlg = false;
             this.$parent.$refs.table_view.refreshTable();

@@ -34,7 +34,7 @@
         </v-container>
       </v-content>
       <v-content v-else-if="$store.state.logged_in == true">
-        <Main></Main>
+        <Main ref="mainComp"></Main>
       </v-content>
     </v-app>
 </template>
@@ -68,7 +68,14 @@ export default {
     },
     onLogin() {
       const auth = firebase.auth();
-      const promise = firebase.auth().signInWithEmailAndPassword(this.email, this.password).catch(
+      const promise = firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+      .then((user)=>{
+        var url = 'http://shark.sbs.arizona.edu/';
+        this.$http.get(url+'api/v1/activity_log?user_email='+user.email+'&type=8&detail='+user.email).then((response)=>{
+          console.log(response);
+        });
+      })
+      .catch(
         error => {
           alert(error.message);
           return;

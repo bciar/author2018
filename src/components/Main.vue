@@ -320,6 +320,7 @@ export default {
         });
         this.$refs.table_view.refreshTable();
         this.setTextStyles();
+        this.logActivity(3,this.$store.state.tab_list[this.$store.state.active_tab]);
       });
     },
 
@@ -423,6 +424,7 @@ export default {
       //alert('Successfully saved');
       this.snackbar.msg = "Saved successfully";
       this.snackbar.show = true;
+      this.logActivity(9,'');
     },
 
     restore_data () {
@@ -509,6 +511,8 @@ export default {
           this.$nextTick(() => {
             this.searchMenu.show = true            
             this.$http.get('http://shark.sbs.arizona.edu:8080/CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
+              
+              this.logActivity(6,'Term:'+this.searchMenu.search_term, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
               //console.log(response);
               this.searchMenu.searching_icon = false;
               var result = searchJson.entries[0];
@@ -569,11 +573,13 @@ export default {
     },
     approveItem() {
       this.approveMenu.dom.style.color = "darkgreen";
+      this.logActivity(4,'Term:'+this.approveMenu.dom.textContent, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
       this.approveMenu.dom = null;
       this.approveMenu.show = false;
     },
     disapproveItem() {
       this.approveMenu.dom.style.color = "orange";
+      this.logActivity(5,'Term:'+this.approveMenu.dom.textContent, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
       this.approveMenu.dom = null;
       this.approveMenu.show = false;
     },
@@ -590,7 +596,7 @@ export default {
         this.snackbar.show = true;
         return;
       }
-      var termData = {
+      const termData = {
         term: this.submitDlg.term,
         parentTerm: this.submitDlg.parentterm,
         definition: this.submitDlg.definition,
@@ -603,6 +609,7 @@ export default {
         console.log(response);
         this.snackbar.msg = "Submitted successfully";
         this.snackbar.show = true;
+        this.logActivity(7,'Term:'+termData.term, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab] + ',ParentTerm:' + termData.parentTerm);
       });
     },
     setSearchValue (val) {
@@ -658,6 +665,14 @@ export default {
       }
       this.searchMenu.show = false;
       this.$refs.table_view.refreshTable();
+      this.logActivity(10,'Term:'+val, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
+    },
+
+    logActivity(act_id, detail, detail_addition = "") {
+      var url = 'http://shark.sbs.arizona.edu/';
+      this.$http.get(url+'api/v1/activity_log?user_email'+firebase.auth().currentUser.email+'&type='+act_id+'&detail='+encodeURI(detail)+'&detail_addition='+encodeURI(detail_addition)).then((response)=>{
+        console.log(response);
+      });
     }
   }
 }
