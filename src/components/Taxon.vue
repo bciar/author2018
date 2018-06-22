@@ -1,11 +1,11 @@
 <template>
     <div>
-      <v-tabs v-model="active" color="blue" dark slider-color="yellow">
-        <v-tab color="black" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)" v-on:click="changeTab(key)">
+      <v-tabs v-model="active" color="gray" dark>
+        <v-tab color="white" v-bind:style="styleObject" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)" v-on:click="changeTab(key)">
           {{tab}}
         </v-tab>
         <v-spacer></v-spacer>
-        <v-btn color="indigo" v-on:click="editTab(-1)">New Tab</v-btn>
+        <v-btn color="grey darken-1" v-on:click="editTab(-1)">New Tab</v-btn>
       </v-tabs>
       
       <v-dialog v-model="editDlg" max-width="500px">
@@ -37,7 +37,15 @@ export default {
             newDlg: false,
             modalName: '',
             new_name: '',
-            current_index: ''
+            current_index: '',
+            styleObject: {
+                //color: 'red',
+                'borderWidth': '1px',
+                'borderColor': 'gray',
+                'borderStyle': 'solid',
+                'color': 'white'
+                //border: 'solid 1px color',
+            },
         }
     },
     mounted () {
@@ -58,7 +66,21 @@ export default {
             }
         },
 
+        checkIfExist(val) {
+            for (var i = 0; i < this.$store.state.tab_list.length; i++) { 
+                if(this.$store.state.tab_list[i] == val) {
+                    return 1;
+                }
+            }
+            return 0;
+        },
+
         saveName () {
+            if (this.checkIfExist(this.new_name) == 1) {
+                this.$parent.snackbar.msg = "Name already exist";
+                this.$parent.snackbar.show = true;
+                return 0;
+            }
             if (this.current_index == -1) {
                 this.$store.state.tab_list.push(this.new_name);
                 this.$store.state.text_array.push("");
@@ -88,6 +110,11 @@ export default {
 
         changeTab (index) {
             this.$store.state.active_tab = index;
+            this.$parent.$refs.table_view.erase_highlight();
+            // var word = this.$parent.$refs.table_view.highlightedWord;
+            // console.log(word)
+            // console.log(this.$parent)
+            // this.$parent.highlight_word(word);
         }
     }
 }

@@ -33,6 +33,7 @@ export default {
           text: "Hello World!",
           headers_array: [],
           item_array: [],
+          highlightedWord: ''
         }
     },
     methods: {
@@ -66,6 +67,7 @@ export default {
       },
 
       erase_highlight() {
+        this.highlightedWord = '';
         this.$store.state.table_highlights.forEach(cell => {
           cell.firstChild.firstChild.innerHTML = cell.firstChild.firstChild.innerText;
         })
@@ -92,7 +94,9 @@ export default {
         var str = this.GetWordByPos(window.getSelection().anchorNode.textContent, window.getSelection().focusOffset);
         this.erase_highlight();
         this.highlight_word(str);
+        this.highlightedWord = str;
         this.$parent.highlight_word(str);
+
       },
 
       GetWordByPos(str, pos) {

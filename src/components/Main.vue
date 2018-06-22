@@ -112,6 +112,9 @@ import json from '@/json/newResponseJson.json'
 import searchJson from '@/json/searchDummy.json'
 import firebase from 'firebase'
 import Parchment from 'parchment'
+import CONFIG from '@/config/config.js'
+import axios from 'axios'
+
 
 
 export default {
@@ -209,20 +212,36 @@ export default {
     highlight_word (word) {
       this.erase_highlight();
       var textContent = this.editor.getText().toLowerCase();
+      console.log(textContent);
 
       // add positions of word to highlight
       var indices = this.getIndicesOf(word, textContent);
 
       // add highlight format to words
       this.$store.state.editor_highlights.forEach(item => {
-        this.editor.formatText(item.pos, item.len, {"background-color":"yellowgreen","color":"blue"}, true);
+
+        var embedOffset = 0;
+        for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+          if( embedKey != 'undefined' && Number(embedKey) < item.pos) {
+            embedOffset ++;
+          }
+        }
+
+        this.editor.formatText(embedOffset + item.pos, item.len, {"background-color":"yellowgreen","color":"blue"}, true);
       });
     },
 
     // erase highlight format from words
     erase_highlight () {
       this.$store.state.editor_highlights.forEach(item => {
-        this.editor.formatText(item.pos, item.len, {"background-color":"white","color":"black"}, true);
+        
+        var embedOffset = 0;
+        for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+          if( embedKey != 'undefined' && Number(embedKey) < item.pos) {
+            embedOffset ++;
+          }
+        }
+        this.editor.formatText(embedOffset + item.pos, item.len, {"background-color":"white","color":"black"}, true);
       });
       this.$store.state.editor_highlights = [];
     },
@@ -253,15 +272,21 @@ export default {
       var fetch_result;
       // there should fetch function; result will be retrieved to fetch result
       var parsecontent = this.editor.getText();
-      this.$http.get('http://shark.sbs.arizona.edu:8080/parse?sentence='+encodeURI(parsecontent)).then(response => {
-        //fetch_result = response.body;
-        fetch_result = json;
+
+      const self = this;
+
+      this.$http.get(CONFIG.apiUrl+'parse?sentence='+encodeURI(parsecontent)).then(response => {
+        fetch_result = response.body;
+        console.log(response.body);
+        //fetch_result = json;
         // this.$store.state.item_index_list = {};
         // this.$store.state.item_list = [];
         const self = this;
 
         fetch_result.statements.forEach(val => {
           val.biologicalEntities.forEach(bioVal => {
+            console.log('bio_part');
+            console.log(bioVal);
             const bio = bioVal;
             this.$store.state.ontology_index_list[bioVal.name] = {
               name: bioVal.name,
@@ -273,8 +298,10 @@ export default {
             if(bioVal.hasOwnProperty('ontologyid')) {
               this.$store.state.ontology_index_list[bioVal.name].ontology = this.parseOntologyId(bioVal.ontologyid);
             }
-            if(bioVal.hasOwnProperty('character')) {
-              bioVal.character.forEach(character => {
+            if(bioVal.hasOwnProperty('characters')) {
+              bioVal.characters.forEach(character => {
+                console.log('character_part');
+                console.log(character);
                 var item_string = bio.name + " " + character.name;
                 // parse and store ontology matching info
                 if(character.hasOwnProperty('ontologyid')) {
@@ -374,37 +401,39 @@ export default {
             }
           } else {
             var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
-            var parent_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_parent_term;
-            //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
-            var index = this.editor.getText().toLowerCase().search(search_term);
-            if ( index != -1) {
-              var embedOffset = 0;
-              for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
-                if( embedKey != 'undefined' && Number(embedKey) < index) {
-                  embedOffset ++;
+            if(isNaN(search_term) == true) {      // avoid numeric values
+              var parent_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_parent_term;
+              //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
+              var index = this.editor.getText().toLowerCase().search(search_term);
+              if ( index != -1) {
+                var embedOffset = 0;
+                for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+                  if( embedKey != 'undefined' && Number(embedKey) < index) {
+                    embedOffset ++;
+                  }
                 }
-              }
-              var isExist = 0;
-              for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
-                if( embedKey != 'undefined' && this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][embedKey].text_index == index) {
-                  isExist ++;
+                var isExist = 0;
+                for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+                  if( embedKey != 'undefined' && this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][embedKey].text_index == index) {
+                    isExist ++;
+                  }
                 }
-              }
-              if(isExist == 0) {
-                var pos = embedOffset + index + search_term.length;
-                var delta = this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
-                if (!this.$store.state.embeds_data.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
-                  this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]] = {};
+                if(isExist == 0) {
+                  var pos = embedOffset + index + search_term.length;
+                  var delta = this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
+                  if (!this.$store.state.embeds_data.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
+                    this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]] = {};
+                  }
+                  this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][pos.toString()] = {
+                    search_term: search_term,
+                    parent_term: parent_term,
+                    text_index: index,
+                    delta: delta,
+                    item_key: key
+                  };
                 }
-                this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][pos.toString()] = {
-                  search_term: search_term,
-                  parent_term: parent_term,
-                  text_index: index,
-                  delta: delta,
-                  item_key: key
-                };
+                this.editor.update();
               }
-              this.editor.update();
             }
           }
         }
@@ -509,11 +538,13 @@ export default {
           this.searchMenu.posX = e.clientX
           this.searchMenu.posY = e.clientY
           this.$nextTick(() => {
-            this.searchMenu.show = true            
-            this.$http.get('http://shark.sbs.arizona.edu:8080/CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
+            this.searchMenu.show = true          
+            console.log(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term))  
+            this.$http.get(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
               
               this.logActivity(6,'Term:'+this.searchMenu.search_term, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
-              //console.log(response);
+              console.log(response);
+
               this.searchMenu.searching_icon = false;
               var result = searchJson.entries[0];
               this.searchMenu.parent = result.parentTerm;
@@ -605,7 +636,7 @@ export default {
         relatedTaxon: this.submitDlg.relatedTaxon,
         submissionTime: Date.now()
       }
-      this.$http.post('http://shark.sbs.arizona.edu:8080/submit',termData).then((response) => {
+      this.$http.post(CONFIG.apiUrl+'submit',termData).then((response) => {
         console.log(response);
         this.snackbar.msg = "Submitted successfully";
         this.snackbar.show = true;
@@ -669,8 +700,8 @@ export default {
     },
 
     logActivity(act_id, detail, detail_addition = "") {
-      var url = 'http://shark.sbs.arizona.edu/';
-      this.$http.get(url+'api/v1/activity_log?user_email'+firebase.auth().currentUser.email+'&type='+act_id+'&detail='+encodeURI(detail)+'&detail_addition='+encodeURI(detail_addition)).then((response)=>{
+      console.log(firebase.auth().currentUser.email);
+      this.$http.get(CONFIG.backEndUrl+'api/v1/activity_log?user_email='+firebase.auth().currentUser.email+'&type='+act_id+'&detail='+encodeURI(detail)+'&detail_addition='+encodeURI(detail_addition)).then((response)=>{
         console.log(response);
       });
     }

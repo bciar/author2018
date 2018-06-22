@@ -1,19 +1,19 @@
 <template>
     <!-- if the user is not logged in then display this -->
     <v-app id="inspire">
-      <v-toolbar v-if="$store.state.logged_in" color="indigo" dark fixed app clipped-right>
-        <v-toolbar-title>Vue Organism</v-toolbar-title>
+      <v-toolbar v-if="$store.state.logged_in" color="grey darken-2" dark fixed app clipped-right>
+        <v-toolbar-title>Description Editor</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="blue" v-on:click="onSignOut">SignOut</v-btn>
-        <v-btn color="blue" v-on:click.stop="Export2Doc('editor_viewID','doc_description')">Export as *.doc</v-btn>
-        <v-btn v-on:click.stop="ExportTableToExcel('table_viewID','excel_table')" color="blue">Export as *.xlsx</v-btn>
+        <v-btn color="grey" v-on:click="onSignOut">SignOut</v-btn>
+        <v-btn color="grey" v-on:click.stop="Export2Doc('editor_viewID','doc_description')">Export as *.doc</v-btn>
+        <v-btn v-on:click.stop="ExportTableToExcel('table_viewID','excel_table')" color="grey">Export as *.xlsx</v-btn>
       </v-toolbar>
       <v-content v-if="$store.state.logged_in == false">
         <v-container fluid fill-height>
           <v-layout align-center justify-center>
             <v-flex xs12 sm8 md4>
               <v-card class="elevation-12">
-                <v-toolbar dark color="primary">
+                <v-toolbar dark color="grey darken-2">
                   <v-toolbar-title>Login</v-toolbar-title>
                   <v-spacer></v-spacer>
                 </v-toolbar>
@@ -25,8 +25,8 @@
                 </v-card-text>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="primary" v-on:click="onLogin">SignIn</v-btn>
-                  <v-btn color="primary" v-on:click="onSignUp">SignUp</v-btn>
+                  <v-btn color="grey" v-on:click="onLogin">SignIn</v-btn>
+                  <v-btn color="grey" v-on:click="onSignUp">SignUp</v-btn>
                 </v-card-actions>
               </v-card>
             </v-flex>
