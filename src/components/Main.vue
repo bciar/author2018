@@ -279,8 +279,8 @@ export default {
         fetch_result = response.body;
         console.log(response.body);
         //fetch_result = json;
-        // this.$store.state.item_index_list = {};
-        // this.$store.state.item_list = [];
+        //this.$store.state.item_index_list = {};
+        //this.$store.state.item_list = [];
         const self = this;
 
         fetch_result.statements.forEach(val => {
@@ -291,7 +291,7 @@ export default {
             this.$store.state.ontology_index_list[bioVal.name] = {
               name: bioVal.name,
               approved: null,
-              nameOrigin: bioVal.name_original,
+              nameOrigin: bioVal.nameOriginal,
               ontology: null
             };
             // parse and store ontology matching info
@@ -302,7 +302,7 @@ export default {
               bioVal.characters.forEach(character => {
                 console.log('character_part');
                 console.log(character);
-                var item_string = bio.name + " " + character.name;
+                var item_string = character.name + " *of* " + bio.name;
                 // parse and store ontology matching info
                 if(character.hasOwnProperty('ontologyid')) {
                   if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(item_string)) {
@@ -369,13 +369,15 @@ export default {
 
       // bold each items in editor
       for(var key in this.$store.state.ontology_index_list) {
-        var index = textContent.search(key);
+        console.log(this.$store.state.ontology_index_list[key])
+        var txtToBold = this.$store.state.ontology_index_list[key].nameOrigin.toLowerCase();
+        var index = textContent.search(txtToBold);
         if ( index != -1) {
-          this.editor.formatText(index, key.length, "bold", true);
+          this.editor.formatText(index, txtToBold.length, "bold", true);
           
           if (this.$store.state.ontology_index_list[key].ontology != null) {
             if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
-              this.editor.formatText(index, key.length, "color", "lightgreen");
+              this.editor.formatText(index, txtToBold.length, "color", "lightgreen");
             }
           }
         }

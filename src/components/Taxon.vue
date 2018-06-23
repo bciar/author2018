@@ -6,6 +6,7 @@
         </v-tab>
         <v-spacer></v-spacer>
         <v-btn color="grey darken-1" v-on:click="editTab(-1)">New Tab</v-btn>
+        <v-btn color="grey darken-1" v-on:click="deleteTab()">Delete Tab</v-btn>
       </v-tabs>
       
       <v-dialog v-model="editDlg" max-width="500px">
@@ -54,7 +55,7 @@ export default {
 
         editTab (key) {
             if(key != -1) {
-                this.new_name = this.$store.state.tab_list[key];
+                //this.new_name = this.$store.state.tab_list[key];
                 this.current_index = key;
                 this.modalName = "Change Tab Name";
                 this.editDlg = true;
@@ -68,7 +69,7 @@ export default {
 
         checkIfExist(val) {
             for (var i = 0; i < this.$store.state.tab_list.length; i++) { 
-                if(this.$store.state.tab_list[i] == val) {
+                if(this.$store.state.tab_list[i].toLowerCase() == val.toLowerCase()) {
                     return 1;
                 }
             }
@@ -115,7 +116,37 @@ export default {
             // console.log(word)
             // console.log(this.$parent)
             // this.$parent.highlight_word(word);
+        },
+
+        deleteTab () {
+            const oldName = this.$store.state.tab_list[this.$store.state.active_tab];
+            console.log(oldName)
+            this.$store.state.item_list.forEach((item, index) => {
+                if (item.hasOwnProperty(oldName)) {
+                    item[this.new_name] = item[oldName];//this.$store.state.tab_list[this.current_index];
+                    delete item[oldName];
+                }
+            });
+
+            if (this.$store.state.embeds_data.hasOwnProperty(oldName)) {
+                var oldTabEmbeds = this.$store.state.embeds_data[oldName];
+                delete this.$store.state.embeds_data[oldName];
+                this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
+            }            
+            var deleteIndex = 0;
+            console.log(oldName)
+            this.$store.state.tab_list.forEach( (item, index) => {
+                console.log(item);
+                if (item == oldName) {
+                    //delete item;
+                    console.log(index);
+                    this.$store.state.tab_list.splice(index,1);
+                    this.changeTab(0);
+                }
+            });
+            // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
         }
+
     }
 }
 
