@@ -283,10 +283,25 @@ export default {
         //this.$store.state.item_list = [];
         const self = this;
 
+        // clean items for current tab
+        this.$store.state.item_list.forEach((item, index) => {
+          //console.log(item);
+          // get if item has other values for other tabs
+          var otherValueCnt = 0;
+          for(var i = 0 ; i < self.$store.state.tab_list.length; i ++) {
+            if (self.$store.state.active_tab != i && item.hasOwnProperty(self.$store.state.tab_list[i])) {
+              otherValueCnt ++;
+            }
+          }
+          if (otherValueCnt == 0) {         // if item is not related to other tabs
+            delete self.$store.state.item_index_list[item.name];
+            self.$store.state.item_list.splice(index, 1);
+          }
+        });
+
+
         fetch_result.statements.forEach(val => {
           val.biologicalEntities.forEach(bioVal => {
-            console.log('bio_part');
-            console.log(bioVal);
             const bio = bioVal;
             this.$store.state.ontology_index_list[bioVal.name] = {
               name: bioVal.name,
@@ -300,8 +315,6 @@ export default {
             }
             if(bioVal.hasOwnProperty('characters')) {
               bioVal.characters.forEach(character => {
-                console.log('character_part');
-                console.log(character);
                 var item_string = character.name + " *of* " + bio.name;
                 // parse and store ontology matching info
                 if(character.hasOwnProperty('ontologyid')) {
@@ -337,7 +350,11 @@ export default {
                 } else {
                   this.$store.state.item_list.forEach(item => {
                     if(item.name == item_string) {
-                      item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
+                      if (!item[this.$store.state.tab_list[this.$store.state.active_tab]].includes(character.value)) {
+                        
+                        item[this.$store.state.tab_list[this.$store.state.active_tab]] += ' | ' + character.value;
+                      }
+                      //item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
                     }
                   });
                 }
@@ -369,12 +386,30 @@ export default {
 
       // bold each items in editor
       for(var key in this.$store.state.ontology_index_list) {
-        console.log(this.$store.state.ontology_index_list[key])
         var txtToBold = this.$store.state.ontology_index_list[key].nameOrigin.toLowerCase();
         var index = textContent.search(txtToBold);
         if ( index != -1) {
-          this.editor.formatText(index, txtToBold.length, "bold", true);
-          
+          // bold only first word of sentence (added from issue 11)
+          var toBold = false;
+          if (index == 0) {
+            toBold = true;
+          } else {
+            var iter = index - 1;
+            while(iter > 0) {
+              if (textContent.charAt(iter) == ' ') {
+                iter --;
+              } else if(textContent.charAt(iter) == '.') {
+                toBold = true;
+                break;
+              } else {
+                break;
+              }
+            }
+          }
+
+          if( toBold) {
+            this.editor.formatText(index, txtToBold.length, "bold", true);
+          }          
           if (this.$store.state.ontology_index_list[key].ontology != null) {
             if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
               this.editor.formatText(index, txtToBold.length, "color", "lightgreen");

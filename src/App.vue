@@ -1,7 +1,7 @@
 <template>
     <!-- if the user is not logged in then display this -->
     <v-app id="inspire">
-      <v-toolbar v-if="$store.state.logged_in" color="grey darken-2" dark fixed app clipped-right>
+      <v-toolbar v-if="$store.state.logged_in" color="grey darken-2" dark  app clipped-right>
         <v-toolbar-title>Description Editor</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn color="grey" v-on:click="onSignOut">SignOut</v-btn>
@@ -42,6 +42,7 @@
 <script>
 import Main from '@/components/Main'
 import firebase from 'firebase'
+import Parchment from 'parchment'
 
 export default {
   name: 'App',
@@ -123,9 +124,29 @@ export default {
 
 
     Export2Doc (element, filename = '') {
+
+
+
+      // delete all embeds before export doc
+      var cells = document.getElementsByTagName("img");
+      var embed_cnt = 0;
+      var embedsArray = [];
+      for (var i = cells.length - 1; i >= 0 ; i --) {
+        if( cells[i].outerHTML == '<img src="/static/quiz_mark.jpg">') {
+          var embed_to_delete = Parchment.find(cells[i]);
+          var imgIndex = this.$refs.mainComp.editor.getIndex(embed_to_delete);
+          embedsArray.push(imgIndex);
+          this.$refs.mainComp.editor.deleteText(imgIndex, 1);
+          embed_cnt ++;
+        }
+      }
+
+
       var preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>";
       var postHtml = "</body></html>";
-      var html = preHtml+document.getElementById(element).innerHTML+postHtml;
+      var content = document.getElementById(element).innerHTML;
+      
+      var html = preHtml+content+postHtml;
 
       var blob = new Blob(['\ufeff', html], {
           type: 'application/msword'
@@ -155,6 +176,14 @@ export default {
           downloadLink.click();
       }
       document.body.removeChild(downloadLink);
+
+      // backup all embeds after export doc
+
+      for (var i = embedsArray.length - 1; i >= 0 ; i --) {
+        console.log(embedsArray[i]);
+        this.$refs.mainComp.editor.insertEmbed(embedsArray[i], 'image', '/static/quiz_mark.jpg');
+      }
+
     }
   },
   mounted(){

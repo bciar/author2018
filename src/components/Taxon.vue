@@ -110,8 +110,16 @@ export default {
         },
 
         changeTab (index) {
+            //this.$parent.$refs.table_view.erase_highlight();
+            //this.$parent.erase_highlight();
+            const self = this;
             this.$store.state.active_tab = index;
-            this.$parent.$refs.table_view.erase_highlight();
+            this.$nextTick(() => {
+                var word = self.$parent.$refs.table_view.highlightedWord;
+                console.log(word)
+                console.log(this.$parent)
+                self.$parent.highlight_word(word);
+            })
             // var word = this.$parent.$refs.table_view.highlightedWord;
             // console.log(word)
             // console.log(this.$parent)
