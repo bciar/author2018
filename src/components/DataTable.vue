@@ -112,6 +112,9 @@ export default {
 
       keyup_event (origin_text) {
         //console.log(window.getSelection());
+        if (window.getSelection().focusNode.tagName == "TD") {
+          return;
+        }
         if(window.getSelection().focusNode.parentNode.className.includes("highlight")) {
           var new_text = window.getSelection().focusNode.parentNode.parentNode.textContent;
           if (new_text != origin_text) {

@@ -152,6 +152,7 @@ export default {
                     this.changeTab(0);
                 }
             });
+            this.$store.state.active_tab = 0;
             // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
         }
 

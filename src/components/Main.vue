@@ -94,7 +94,7 @@
           </v-flex>
         </v-layout>
       </v-flex>
-      <v-flex xs7 fill-height>
+      <v-flex xs7 fill-height style="overflow-y:scroll">
         <keep-alive>
           <table-view ref="table_view"></table-view>
         </keep-alive>
@@ -212,7 +212,7 @@ export default {
     highlight_word (word) {
       this.erase_highlight();
       var textContent = this.editor.getText().toLowerCase();
-      console.log(textContent);
+      //console.log(textContent);
 
       // add positions of word to highlight
       var indices = this.getIndicesOf(word, textContent);
@@ -300,45 +300,33 @@ export default {
         });
 
 
+        this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]] = [];
         fetch_result.statements.forEach(val => {
           val.biologicalEntities.forEach(bioVal => {
             const bio = bioVal;
-            this.$store.state.ontology_index_list[bioVal.name] = {
+            this.$store.state.ontology_index_list[bioVal.nameOrigin] = {
               name: bioVal.name,
               approved: null,
               nameOrigin: bioVal.nameOriginal,
               ontology: null
             };
             // parse and store ontology matching info
-            if(bioVal.hasOwnProperty('ontologyid')) {
-              this.$store.state.ontology_index_list[bioVal.name].ontology = this.parseOntologyId(bioVal.ontologyid);
+            if(bioVal.hasOwnProperty('ontologyId') && bioVal.ontologyId != null) {
+              this.$store.state.ontology_index_list[bioVal.nameOrigin].ontology = this.parseOntologyId(bioVal.ontologyId);
             }
             if(bioVal.hasOwnProperty('characters')) {
               bioVal.characters.forEach(character => {
-                var item_string = character.name + " *of* " + bio.name;
+                var item_string = character.name + " of " + bio.name;
                 // parse and store ontology matching info
-                if(character.hasOwnProperty('ontologyid')) {
-                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(item_string)) {
-                    var item = {};
-                    item[this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
-                    this.$store.state.item_ontology_info_list[item_string] = item;
-                  } else {
-                    this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]] = this.parseOntologyId(character.ontologyid);
-                  }
+                var ontologyInfo = {};
+                if(character.hasOwnProperty('ontologyId') && character.ontologyId != null) {
+                  ontologyInfo = this.parseOntologyId(character.ontologyId);
                 } else {
-                  // this.$store.state.item_ontology_info_list[item_string] = null;
-                  if ( !this.$store.state.item_ontology_info_list.hasOwnProperty(item_string)) {
-                    var item = {};
-                    item[this.$store.state.tab_list[this.$store.state.active_tab]] = {
-                      search_term: character.value
-                    };
-                    this.$store.state.item_ontology_info_list[item_string] = item;
-                  } else {
-                    this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]] = {
-                      search_term: character.value
-                    };
-                  }
+                  ontologyInfo = {
+                    search_term: character.value
+                  };
                 }
+                this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]].push(ontologyInfo);
                 // check if item exist in table
                 if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
                   this.$store.state.item_index_list[item_string] = item_string;                   // save item for index key for future search
@@ -418,28 +406,28 @@ export default {
         }
       }
       
-      for(var key in this.$store.state.item_ontology_info_list) {
-        var characterOntologyInfo = this.$store.state.item_ontology_info_list[key];
-        if (characterOntologyInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
-          if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].hasOwnProperty('matching_value')) {
-            var index = textContent.search(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term);
+      for(var key in this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+        var characterOntologyInfo = this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]][key];
+          //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
+          if (characterOntologyInfo.hasOwnProperty('matching_value')) {
+            var index = textContent.search(characterOntologyInfo.search_term);
             if ( index != -1) {
-              if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved == null) {
-                if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_value == 1) {
-                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "lightgreen");
-                }
+              if (characterOntologyInfo.approved == null) {
+                //if (characterOntologyInfo.matching_value == 1) {
+                  this.editor.formatText(index, characterOntologyInfo.search_term.length, "color", "lightgreen");
+                //}
               } else {
-                if (characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].approved) {
-                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "darkgreen");
+                if (characterOntologyInfo.approved) {
+                  this.editor.formatText(index, characterOntologyInfo.search_term.length, "color", "darkgreen");
                 } else {
-                  this.editor.formatText(index, characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.length, "color", "orange");
+                  this.editor.formatText(index, characterOntologyInfo.search_term.length, "color", "orange");
                 }
               }
             }
           } else {
-            var search_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term.toString();
+            var search_term = characterOntologyInfo.search_term.toString();
             if(isNaN(search_term) == true) {      // avoid numeric values
-              var parent_term = characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]].matching_parent_term;
+              var parent_term = characterOntologyInfo.matching_parent_term;
               //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
               var index = this.editor.getText().toLowerCase().search(search_term);
               if ( index != -1) {
@@ -473,7 +461,6 @@ export default {
               }
             }
           }
-        }
       }
       this.$refs.table_view.refreshTable();
     },
@@ -595,9 +582,11 @@ export default {
       } else {
         if (e.srcElement.style.color == "lightgreen") {
           var term = e.srcElement.textContent.toLowerCase();
+          console.log(term);
           this.approveMenu.dom = e.srcElement;
           if (e.srcElement.tagName == "STRONG") {
             // search info in ontology list
+            console.log(this.$store.state.ontology_index_list);
             if(this.$store.state.ontology_index_list.hasOwnProperty(term)) {
               if (this.$store.state.ontology_index_list[term].ontology.search_term == term) {
                 var matchingInfo = this.$store.state.ontology_index_list[term].ontology;
@@ -654,8 +643,10 @@ export default {
     newTermDlg () {
       console.log("new Term");
       this.searchMenu.show = false;
+      this.submitDlg.sentence = this.editor.getText();
       this.submitDlg.term = this.searchMenu.search_term;
       this.submitDlg.author = firebase.auth().currentUser.email;
+      this.submitDlg.relatedTaxon = this.$store.state.tab_list[this.$store.state.active_tab];
       this.submitDlg.show = true;
     },
     submitTerm() {
@@ -737,7 +728,6 @@ export default {
     },
 
     logActivity(act_id, detail, detail_addition = "") {
-      console.log(firebase.auth().currentUser.email);
       this.$http.get(CONFIG.backEndUrl+'api/v1/activity_log?user_email='+firebase.auth().currentUser.email+'&type='+act_id+'&detail='+encodeURI(detail)+'&detail_addition='+encodeURI(detail_addition)).then((response)=>{
         console.log(response);
       });
