@@ -1,3 +1,11 @@
+<style>
+.table-view{
+  border-right: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  overflow-y:scroll;
+  height:100%;
+}
+</style>
 <template>
   <div style="height:100%">
     <v-layout row>
@@ -11,8 +19,16 @@
           <v-alert :value="true" outline  type="success" style="height:42px; width:100%">
             Edit a template to produce new description
           </v-alert>
-            <v-btn v-on:click="matricize()" color="gray">Matricize</v-btn>
-            <v-btn v-on:click="save_data()" color="white">Save</v-btn>
+          <v-progress-circular
+            :size="45"
+            :width="5"
+            color="success"
+            style="margin:0 30px 0 10px;"
+            indeterminate
+            v-show="in_progress"
+          ></v-progress-circular>
+          <v-btn v-on:click="matricize()" color="gray" style="text-transform:none">Matricize</v-btn>
+          <v-btn v-on:click="save_data()" color="white" style="text-transform:none">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
           <v-flex xs12>
@@ -59,7 +75,7 @@
                 </v-list>
               </v-menu>
             </div>
-            
+
             <v-snackbar
               :timeout="3000"
               :top="true"
@@ -89,12 +105,10 @@
                 </v-card-actions>
               </v-card>
             </v-dialog>
-
-
           </v-flex>
         </v-layout>
       </v-flex>
-      <v-flex xs7 fill-height style="overflow-y:scroll">
+      <v-flex xs7 fill-height class="table-view">
         <keep-alive>
           <table-view ref="table_view"></table-view>
         </keep-alive>
@@ -158,7 +172,8 @@ export default {
         msg: ""
       },
       editor: null,
-      embedData: {}
+      embedData: {},
+      in_progress: false
     }
   },
   beforeCreate: function() {
@@ -166,6 +181,16 @@ export default {
   mounted: function() {
     const self = this;
     this.restore_data();
+
+    // Fill description array with blank text so the count is same as the tab list array
+    const tab_count = this.$store.state.tab_list.length;
+    const description_count = this.$store.state.description_array.length;
+    if (tab_count>0 && description_count<tab_count) {
+      for (let i=description_count; i<tab_count; i++) {
+        this.$store.state.description_array.push("");
+      }
+    }
+
     this.editor = this.$refs.rich_edit.quill;
     this.editor.on('selection-change', function(range, oldRange, source) {
         var sel_node = window.getSelection();
@@ -182,9 +207,9 @@ export default {
 
   },
   components: {
-    "taxon-tab" : Taxon,
-    "table-view" : DataTable,
-    "rich-text" :VueEditor
+    "taxon-tab": Taxon,
+    "table-view": DataTable,
+    "rich-text": VueEditor
     },
   methods: {
     // get all position data from text editor and add to hightlight array
@@ -234,7 +259,7 @@ export default {
     // erase highlight format from words
     erase_highlight () {
       this.$store.state.editor_highlights.forEach(item => {
-        
+
         var embedOffset = 0;
         for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
           if( embedKey != 'undefined' && Number(embedKey) < item.pos) {
@@ -268,91 +293,106 @@ export default {
       return parseResult;
     },
 
-    matricize () {
-      var fetch_result;
-      // there should fetch function; result will be retrieved to fetch result
-      var parsecontent = this.editor.getText();
-
-      const self = this;
-
-      this.$http.get(CONFIG.apiUrl+'parse?sentence='+encodeURI(parsecontent)).then(response => {
-        fetch_result = response.body;
-        console.log(response.body);
-        //fetch_result = json;
-        //this.$store.state.item_index_list = {};
-        //this.$store.state.item_list = [];
-        const self = this;
-
-        // clean items for current tab
+    clean_item_list() {
+        // iterate each row and clear the empty row, in other words arrange the item_list state
         this.$store.state.item_list.forEach((item, index) => {
-          //console.log(item);
-          // get if item has other values for other tabs
-          var otherValueCnt = 0;
-          for(var i = 0 ; i < self.$store.state.tab_list.length; i ++) {
-            if (self.$store.state.active_tab != i && item.hasOwnProperty(self.$store.state.tab_list[i])) {
-              otherValueCnt ++;
+            // get if item has other values for other tabs
+            var otherValueCnt = 0;
+            for(var i = 0 ; i < this.$store.state.tab_list.length; i ++) {
+              if (this.$store.state.active_tab != i && item.hasOwnProperty(this.$store.state.tab_list[i])) {
+                otherValueCnt ++;
+              }
             }
-          }
-          if (otherValueCnt == 0) {         // if item is not related to other tabs
-            delete self.$store.state.item_index_list[item.name];
-            self.$store.state.item_list.splice(index, 1);
-          }
+            if (otherValueCnt == 0) { // if item is not related to other tabs
+              delete this.$store.state.item_index_list[item.name];
+              this.$store.state.item_list.splice(index, 1);
+            }
         });
+    },
 
+    call_parse(parsecontent, tab_index) {
+      let fetch_result;
+      const current_tab_name = this.$store.state.tab_list[tab_index];
+      this.in_progress = true;
+      this.$http.get(CONFIG.apiUrl+'parse?sentence='+encodeURI(parsecontent)).then(response => {
+        console.log('api response: ', response.body);
+        this.in_progress = false;
+        fetch_result = response.body;
 
-        this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]] = [];
+        this.$store.state.item_ontology_info_list[current_tab_name] = [];
         fetch_result.statements.forEach(val => {
-          val.biologicalEntities.forEach(bioVal => {
-            const bio = bioVal;
-            this.$store.state.ontology_index_list[bioVal.nameOrigin] = {
-              name: bioVal.name,
-              approved: null,
-              nameOrigin: bioVal.nameOriginal,
-              ontology: null
-            };
-            // parse and store ontology matching info
-            if(bioVal.hasOwnProperty('ontologyId') && bioVal.ontologyId != null) {
-              this.$store.state.ontology_index_list[bioVal.nameOrigin].ontology = this.parseOntologyId(bioVal.ontologyId);
-            }
-            if(bioVal.hasOwnProperty('characters')) {
-              bioVal.characters.forEach(character => {
-                var item_string = character.name + " of " + bio.name;
+            val.biologicalEntities.forEach(bioVal => {
+                const bio = bioVal;
+                this.$store.state.ontology_index_list[bioVal.nameOrigin] = {
+                  name: bioVal.name,
+                  approved: null,
+                  nameOrigin: bioVal.nameOriginal,
+                  ontology: null
+                };
                 // parse and store ontology matching info
-                var ontologyInfo = {};
-                if(character.hasOwnProperty('ontologyId') && character.ontologyId != null) {
-                  ontologyInfo = this.parseOntologyId(character.ontologyId);
-                } else {
-                  ontologyInfo = {
-                    search_term: character.value
-                  };
+                if(bioVal.hasOwnProperty('ontologyId') && bioVal.ontologyId != null) {
+                  this.$store.state.ontology_index_list[bioVal.nameOrigin].ontology = this.parseOntologyId(bioVal.ontologyId);
                 }
-                this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]].push(ontologyInfo);
-                // check if item exist in table
-                if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
-                  this.$store.state.item_index_list[item_string] = item_string;                   // save item for index key for future search
-                  var item = {
-                    name: item_string
-                  }
-                  item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
-                  this.$store.state.item_list.push(item);                                         // add item record ; this will display item in table view
-                } else {
-                  this.$store.state.item_list.forEach(item => {
-                    if(item.name == item_string) {
-                      if (!item[this.$store.state.tab_list[this.$store.state.active_tab]].includes(character.value)) {
-                        
-                        item[this.$store.state.tab_list[this.$store.state.active_tab]] += ' | ' + character.value;
-                      }
-                      //item[this.$store.state.tab_list[this.$store.state.active_tab]] = character.value;
-                    }
-                  });
+                if(bioVal.hasOwnProperty('characters')) {
+                    bioVal.characters.forEach(character => {
+                        const item_string = character.name + " of " + bio.name;
+                        // parse and store ontology matching info
+                        let ontologyInfo = {};
+                        if(character.hasOwnProperty('ontologyId') && character.ontologyId != null) {
+                          ontologyInfo = this.parseOntologyId(character.ontologyId);
+                        } else {
+                          ontologyInfo = {
+                            search_term: character.value
+                          };
+                        }
+                        this.$store.state.item_ontology_info_list[current_tab_name].push(ontologyInfo);
+                        // check if item exist in table
+                        if(!this.$store.state.item_index_list.hasOwnProperty(item_string)) {
+                            this.$store.state.item_index_list[item_string] = item_string; // save item for index key for future search
+                            let item = {
+                                name: item_string
+                            }
+                            item[current_tab_name] = character.value;
+                            this.$store.state.item_list.push(item); // add item record ; this will display item in table view
+                        } else {
+                            this.$store.state.item_list.forEach( (item, index) => {
+                                if(item.name == item_string) {
+                                  let new_item = item;
+                                  new_item[current_tab_name] = character.value;
+                                  this.$store.state.item_list[index] = new_item;
+                                }
+                            });
+                        }
+                    });
                 }
-              });
-            }
-          });
+            });
         });
         this.$refs.table_view.refreshTable();
         this.setTextStyles();
-        this.logActivity(3,this.$store.state.tab_list[this.$store.state.active_tab]);
+        this.logActivity(3, current_tab_name);
+      });
+    },
+
+    store_init() {
+      this.$store.state.item_list = [];
+      this.$store.state.item_index_list = {};
+      this.$store.state.item_ontology_info_list = {};
+      this.$store.state.ontology_index_list = {};
+    },
+
+    matricize () {
+      if (this.$store.state.active_tab==-1) {
+        this.snackbar.msg = "Please select a tab!";
+        if (this.$store.state.text_array.length==0)
+            this.snackbar.msg = "Please add a new tab and select";
+        this.snackbar.show = true;
+        return;
+      }
+
+      this.$store.state.description_array[this.$store.state.active_tab] = this.editor.getText();
+      this.store_init();
+      this.$store.state.description_array.forEach( (d, i) => {
+          this.call_parse(d, i);
       });
     },
 
@@ -397,7 +437,7 @@ export default {
 
           if( toBold) {
             this.editor.formatText(index, txtToBold.length, "bold", true);
-          }          
+          }
           if (this.$store.state.ontology_index_list[key].ontology != null) {
             if (this.$store.state.ontology_index_list[key].ontology.matching_value == 1) {
               this.editor.formatText(index, txtToBold.length, "color", "lightgreen");
@@ -405,7 +445,7 @@ export default {
           }
         }
       }
-      
+
       for(var key in this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]]) {
         var characterOntologyInfo = this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]][key];
           //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
@@ -464,42 +504,35 @@ export default {
       }
       this.$refs.table_view.refreshTable();
     },
-
     save_data() {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/tab_list').set({data:JSON.stringify(this.$store.state.tab_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_list').set({data:JSON.stringify(this.$store.state.item_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_ontology_info_list').set({data:JSON.stringify(this.$store.state.item_ontology_info_list)});
-      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/json_api_result').set({data:JSON.stringify(this.$store.state.json_api_result)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/text_array').set({data:JSON.stringify(this.$store.state.text_array)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_index_list').set({data:JSON.stringify(this.$store.state.item_index_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/ontology_index_list').set({data:JSON.stringify(this.$store.state.ontology_index_list)});
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/embeds_data').set({data:JSON.stringify(this.$store.state.embeds_data)});
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description_array').set({data:JSON.stringify(this.$store.state.description_array)});
       //alert('Successfully saved');
       this.snackbar.msg = "Saved successfully";
       this.snackbar.show = true;
       this.logActivity(9,'');
     },
-
     restore_data () {
       const self = this;
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/tab_list').on('value',function(snapshot) {
         if(snapshot.exists()) {
           self.$store.state.tab_list = JSON.parse(snapshot.val().data);
         }
-      });      
+      });
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_list').on('value',function(snapshot) {
         if(snapshot.exists()) {
           self.$store.state.item_list = JSON.parse(snapshot.val().data);
         }
-      });      
+      });
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/item_ontology_info_list').on('value',function(snapshot) {
         if(snapshot.exists()) {
           self.$store.state.item_ontology_info_list = JSON.parse(snapshot.val().data);
-        }
-      });
-      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/json_api_result').on('value',function(snapshot) {
-        if(snapshot.exists()) {
-          self.$store.state.json_api_result = JSON.parse(snapshot.val().data);
         }
       });
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/text_array').on('value',function(snapshot) {
@@ -520,7 +553,13 @@ export default {
       firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/embeds_data').on('value',function(snapshot) {
         if(snapshot.exists()) {
           self.$store.state.embeds_data = JSON.parse(snapshot.val().data);
-    self.$refs.table_view.refreshTable();
+          self.$refs.table_view.refreshTable();
+        }
+      });
+      firebase.database().ref("users/" + firebase.auth().currentUser.uid + '/description_array').on('value',function(snapshot) {
+        if(snapshot.exists()) {
+          self.$store.state.description_array = JSON.parse(snapshot.val().data);
+          self.$refs.table_view.refreshTable();
         }
       });
     },
@@ -562,10 +601,10 @@ export default {
           this.searchMenu.posX = e.clientX
           this.searchMenu.posY = e.clientY
           this.$nextTick(() => {
-            this.searchMenu.show = true          
-            console.log(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term))  
+            this.searchMenu.show = true
+            console.log(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term))
             this.$http.get(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
-              
+
               this.logActivity(6,'Term:'+this.searchMenu.search_term, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
               console.log(response);
 
@@ -576,7 +615,7 @@ export default {
               result.resultAnnotations.forEach(val => {
                 this.searchMenu.menuItem.push({title:val.value});
               })
-              
+
             });
           });
       } else {
@@ -601,12 +640,12 @@ export default {
             }
           }
           else {
-            // search info in character list this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]] 
+            // search info in character list this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]]
             for(var key in this.$store.state.item_ontology_info_list) {
               var characterInfo = this.$store.state.item_ontology_info_list[key];
               if(characterInfo.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
                 if(characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]].search_term == term) {
-                  var matchingInfo = characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]];            
+                  var matchingInfo = characterInfo[this.$store.state.tab_list[this.$store.state.active_tab]];
                   this.approveMenu.menuItem = [];
                   this.approveMenu.menuItem = [
                     {title: "Search Term:" + matchingInfo.search_term},
@@ -726,11 +765,10 @@ export default {
       this.$refs.table_view.refreshTable();
       this.logActivity(10,'Term:'+val, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
     },
-
     logActivity(act_id, detail, detail_addition = "") {
-      this.$http.get(CONFIG.backEndUrl+'api/v1/activity_log?user_email='+firebase.auth().currentUser.email+'&type='+act_id+'&detail='+encodeURI(detail)+'&detail_addition='+encodeURI(detail_addition)).then((response)=>{
+      /* this.$http.get(CONFIG.backEndUrl+'api/v1/activity_log?user_email='+firebase.auth().currentUser.email+'&type='+act_id+'&detail='+encodeURI(detail)+'&detail_addition='+encodeURI(detail_addition)).then((response)=>{
         console.log(response);
-      });
+      }); */
     }
   }
 }

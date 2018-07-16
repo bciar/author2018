@@ -5,10 +5,14 @@
           {{tab}}
         </v-tab>
         <v-spacer></v-spacer>
-        <v-btn color="grey darken-1" v-on:click="editTab(-1)">New Tab</v-btn>
-        <v-btn color="grey darken-1" v-on:click="deleteTab()">Delete Tab</v-btn>
+        <v-btn flat fab dark small color="white darken-1" v-on:click="editTab(-1)">
+          <v-icon dark>add</v-icon>
+        </v-btn>
+        <v-btn flat fab dark small color="white darken-1" v-on:click="deleteTab()">
+          <v-icon dark>close</v-icon>
+        </v-btn>
       </v-tabs>
-      
+
       <v-dialog v-model="editDlg" max-width="500px">
         <v-card>
           <v-card-title>
@@ -68,7 +72,7 @@ export default {
         },
 
         checkIfExist(val) {
-            for (var i = 0; i < this.$store.state.tab_list.length; i++) { 
+            for (var i = 0; i < this.$store.state.tab_list.length; i++) {
                 if(this.$store.state.tab_list[i].toLowerCase() == val.toLowerCase()) {
                     return 1;
                 }
@@ -85,7 +89,8 @@ export default {
             if (this.current_index == -1) {
                 this.$store.state.tab_list.push(this.new_name);
                 this.$store.state.text_array.push("");
-                
+                this.$store.state.description_array.push("");
+
                 this.$parent.logActivity(1,'New Name:'+this.new_name);
 
             } else {
@@ -102,7 +107,7 @@ export default {
                     var oldTabEmbeds = this.$store.state.embeds_data[oldName];
                     delete this.$store.state.embeds_data[oldName];
                     this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
-                }                
+                }
                 this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
             }
             this.editDlg = false;
@@ -140,7 +145,7 @@ export default {
                 var oldTabEmbeds = this.$store.state.embeds_data[oldName];
                 delete this.$store.state.embeds_data[oldName];
                 this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
-            }            
+            }
             var deleteIndex = 0;
             console.log(oldName)
             this.$store.state.tab_list.forEach( (item, index) => {
@@ -149,6 +154,8 @@ export default {
                     //delete item;
                     console.log(index);
                     this.$store.state.tab_list.splice(index,1);
+                    this.$store.state.text_array.splice(index, 1);
+                    this.$store.state.description_array.splice(index, 1);
                     this.changeTab(0);
                 }
             });

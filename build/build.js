@@ -1,5 +1,5 @@
 'use strict'
-require('./check-versions')()
+// require('./check-versions')()
 
 process.env.NODE_ENV = 'production'
 
@@ -13,7 +13,7 @@ const webpackConfig = require('./webpack.prod.conf')
 
 const spinner = ora('building for production...')
 spinner.start()
-
+console.log('here starts');
 rm(path.join(config.build.assetsRoot, config.build.assetsSubDirectory), err => {
   if (err) throw err
   webpack(webpackConfig, (err, stats) => {

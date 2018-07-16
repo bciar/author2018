@@ -1,3 +1,8 @@
+<style>
+table tr td:first-child {
+  color: rgba(0,0,0,.54);
+}
+</style>
 <template>
   <v-data-table
     :headers="headers_array"
@@ -18,7 +23,7 @@
     </template>
     <template slot="no-data">
       <v-alert :value="true" color="error" icon="warning">
-        Sorry, nothing to display here :(
+        Sorry, nothing to display here :/
       </v-alert>
     </template>
   </v-data-table>
@@ -87,10 +92,9 @@ export default {
 
       highlight_text (event) {
         event.preventDefault();
-        
-        if(window.getSelection().toString() == "")
-        {
-          return;
+
+        if(window.getSelection().toString() == "") {
+            return;
         }
         var str = this.GetWordByPos(window.getSelection().anchorNode.textContent, window.getSelection().focusOffset);
         this.erase_highlight();

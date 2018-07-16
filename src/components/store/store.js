@@ -9,11 +9,12 @@ export const store = new Vuex.Store({
 		logged_in: null,
 		auth_id: -1,
 
-		tab_list: ["Double Click to change Name"],				// (Array) tab list	
+		tab_list: ["Double Click to change Name"], // (Array) tab list
 
-		item_list: [],				// (Array) item list for Table, e.g. [ 0 => { name: "petal color", species1: "red", species2: "blue" }, 1 => { name: "petal count", species1: "2", species2: "4" }]
+		item_list: [], // (Array) item list for Table, e.g. [ 0 => { name: "petal color", species1: "red", species2: "blue" }, 1 => { name: "petal count", species1: "2", species2: "4" }]
+		item_index_list: {}, // (Object) list of item name, e.g. { "petal color":"petal color", "petal count":"petal count"}
 
-		item_ontology_info_list: {},// (Object) list of ontology information of items
+		item_ontology_info_list: {}, // (Object) list of ontology information of items
 		/*	// (Object)
 			item_ontology_info_list[item_string][active_tab_name]
 			{
@@ -23,14 +24,10 @@ export const store = new Vuex.Store({
 				matching_value: matchingValue,
 			}
 		*/
-
-		json_api_result: [],		// (Array) json result coming from parse service API
-
-		text_array: [],				// (Array) text data for each tabs, e.g. [0 => "<b>petals</b> mostly 5, deciduous"]
-
-		item_index_list: {},		// (Object) list of item name, e.g. { "petal color":"petal color", "petal count":"petal count"}
-
 		ontology_index_list: {},	// (Object) list of ontology name, e.g. { "petal": "petal", "flower": "flower" }
+
+    text_array: [],				// (Array) text data for each tabs, e.g. [0 => "<b>petals</b> mostly 5, deciduous"]
+    description_array: [], // Array of pure sentences of each tab
 
 		active_tab: -1,				// (Number) index of active tab
 
@@ -38,7 +35,7 @@ export const store = new Vuex.Store({
 
 		editor_highlights: [],		// (Array) list of highlights in editor
 
-		embeds_data: {}				// (Object) list of embed_mark in editor 
+		embeds_data: {}				// (Object) list of embed_mark in editor
 		/*
 			embeds_data[active_tab_name][position_for_embed]
 			{
