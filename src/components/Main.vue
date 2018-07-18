@@ -27,7 +27,7 @@
             indeterminate
             v-show="in_progress"
           ></v-progress-circular>
-          <v-btn v-on:click="matricize()" color="gray" style="text-transform:none">Matricize</v-btn>
+          <v-btn v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
           <v-btn v-on:click="save_data()" color="white" style="text-transform:none">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
@@ -323,15 +323,17 @@ export default {
         fetch_result.statements.forEach(val => {
             val.biologicalEntities.forEach(bioVal => {
                 const bio = bioVal;
-                this.$store.state.ontology_index_list[bioVal.nameOrigin] = {
-                  name: bioVal.name,
-                  approved: null,
-                  nameOrigin: bioVal.nameOriginal,
-                  ontology: null
-                };
-                // parse and store ontology matching info
-                if(bioVal.hasOwnProperty('ontologyId') && bioVal.ontologyId != null) {
-                  this.$store.state.ontology_index_list[bioVal.nameOrigin].ontology = this.parseOntologyId(bioVal.ontologyId);
+                if (bioVal.nameOriginal !== "" && bioVal.nameOriginal !== undefined) {
+                    this.$store.state.ontology_index_list[bioVal.nameOriginal] = {
+                      name: bioVal.name,
+                      approved: null,
+                      nameOrigin: bioVal.nameOriginal,
+                      ontology: null
+                    };
+                    // parse and store ontology matching info
+                    if(bioVal.hasOwnProperty('ontologyId') && bioVal.ontologyId != null) {
+                      this.$store.state.ontology_index_list[bioVal.nameOriginal].ontology = this.parseOntologyId(bioVal.ontologyId);
+                    }
                 }
                 if(bioVal.hasOwnProperty('characters')) {
                     bioVal.characters.forEach(character => {
@@ -380,7 +382,7 @@ export default {
       this.$store.state.ontology_index_list = {};
     },
 
-    matricize () {
+    matricize (after_delete=false) {
       if (this.$store.state.active_tab==-1) {
         this.snackbar.msg = "Please select a tab!";
         if (this.$store.state.text_array.length==0)
@@ -389,10 +391,15 @@ export default {
         return;
       }
 
-      this.$store.state.description_array[this.$store.state.active_tab] = this.editor.getText();
+      if (!after_delete)
+          this.$store.state.description_array[this.$store.state.active_tab] = this.editor.getText().replace(/(\r\n|\n|\r)/gm,"");
       this.store_init();
       this.$store.state.description_array.forEach( (d, i) => {
-          this.call_parse(d, i);
+          if (d !== '') {
+              this.call_parse(d, i);
+          } else {
+              this.$refs.table_view.refreshTable();
+          }
       });
     },
 

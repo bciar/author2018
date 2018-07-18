@@ -22,9 +22,9 @@ table tr td:first-child {
 
     </template>
     <template slot="no-data">
-      <v-alert :value="true" color="error" icon="warning">
-        Sorry, nothing to display here :/
-      </v-alert>
+      <p style="color:gray;font-size:16px;font-style:italic;padding-top:16px;">
+        Matricized data will appear here
+      </p>
     </template>
   </v-data-table>
 </template>

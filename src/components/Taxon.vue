@@ -133,7 +133,6 @@ export default {
 
         deleteTab () {
             const oldName = this.$store.state.tab_list[this.$store.state.active_tab];
-            console.log(oldName)
             this.$store.state.item_list.forEach((item, index) => {
                 if (item.hasOwnProperty(oldName)) {
                     item[this.new_name] = item[oldName];//this.$store.state.tab_list[this.current_index];
@@ -147,7 +146,8 @@ export default {
                 this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
             }
             var deleteIndex = 0;
-            console.log(oldName)
+            console.log(oldName);
+            this.$store.state.active_tab = 0;
             this.$store.state.tab_list.forEach( (item, index) => {
                 console.log(item);
                 if (item == oldName) {
@@ -159,7 +159,7 @@ export default {
                     this.changeTab(0);
                 }
             });
-            this.$store.state.active_tab = 0;
+            // this.$parent.matricize(true);
             // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
         }
 
