@@ -71,4 +71,9 @@
       <div id="app"></div>
       <!-- built files will be auto injected -->
 </body>
+<script>
+  window.onbeforeunload = function() {
+    return "The changes you made may not be saved. Do you want to continue?";
+  };
+</script>
 </html>
