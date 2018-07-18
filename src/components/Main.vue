@@ -33,7 +33,9 @@
         <v-layout xs12 fill-height>
           <v-flex xs12>
             <div style="height:100%"  @contextmenu="showMenu">
-              <rich-text v-model="$store.state.text_array[$store.state.active_tab]" :disabled="$store.state.active_tab == -1" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID" placeholder="Please select Tab and Edit description">
+              <rich-text v-if="$store.state.active_tab == -1" v-model="nullText" :disabled="true" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID" placeholder="Please select Tab and Edit description">
+              </rich-text>
+              <rich-text v-else v-model="$store.state.text_array[$store.state.active_tab]" :editorToolbar="customToolbar" style="height:100%" ref="rich_edit" id="editor_viewID" placeholder="Please select Tab and Edit description">
               </rich-text>
               <v-menu
                 v-model="approveMenu.show"
@@ -173,7 +175,8 @@ export default {
       },
       editor: null,
       embedData: {},
-      in_progress: false
+      in_progress: false,
+      nullText: ""
     }
   },
   beforeCreate: function() {
@@ -393,6 +396,7 @@ export default {
 
       if (!after_delete)
           this.$store.state.description_array[this.$store.state.active_tab] = this.editor.getText().replace(/(\r\n|\n|\r)/gm,"");
+      console.log('matricize');
       this.store_init();
       this.$store.state.description_array.forEach( (d, i) => {
           if (d !== '') {

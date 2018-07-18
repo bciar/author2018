@@ -1,7 +1,7 @@
 <template>
     <div>
       <v-tabs v-model="active" color="gray" dark>
-        <v-tab color="white" v-bind:style="styleObject" v-for="(tab, key) in $store.state.tab_list" :key="key" ripple v-on:dblclick="editTab(key)" v-on:click="changeTab(key)">
+        <v-tab color="white" v-bind:style="styleObject" v-for="(tab, key) in tabNames" :key="key" ripple v-on:dblclick="editTab(key)" v-on:click="changeTab(key)">
           {{tab}}
         </v-tab>
         <v-spacer></v-spacer>
@@ -40,6 +40,7 @@ export default {
             active: null,
             editDlg: false,
             newDlg: false,
+            tabNames: [],
             modalName: '',
             new_name: '',
             current_index: '',
@@ -54,9 +55,15 @@ export default {
         }
     },
     mounted () {
+        this.updateTabNames()
     },
     methods: {
-
+        updateTabNames () {
+            this.tabNames = this.$store.state.tab_list;
+            if (this.$store.state.active_tab != -1) 
+                this.active = this.$store.state.active_tab;
+            console.log(this.tabNames);
+        },
         editTab (key) {
             if(key != -1) {
                 //this.new_name = this.$store.state.tab_list[key];
@@ -69,6 +76,7 @@ export default {
                 this.modalName = "New Tab Name";
                 this.editDlg = true;
             }
+            this.updateTabNames();
         },
 
         checkIfExist(val) {
@@ -109,26 +117,35 @@ export default {
                     this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
                 }
                 this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
+                
+                if (oldName == "ENTER Taxon name to start") {
+                    this.$store.state.active_tab = 0;
+                }
             }
             this.editDlg = false;
             this.$parent.$refs.table_view.refreshTable();
+            this.updateTabNames();
         },
 
         changeTab (index) {
             //this.$parent.$refs.table_view.erase_highlight();
             //this.$parent.erase_highlight();
+            if (this.$store.state.tab_list[index] == "ENTER Taxon name to start") {
+                this.$store.state.active_tab = -1;
+                return;
+            }
             const self = this;
             this.$store.state.active_tab = index;
             this.$nextTick(() => {
                 var word = self.$parent.$refs.table_view.highlightedWord;
-                console.log(word)
-                console.log(this.$parent)
                 self.$parent.highlight_word(word);
             })
+            console.log(index)
             // var word = this.$parent.$refs.table_view.highlightedWord;
             // console.log(word)
             // console.log(this.$parent)
             // this.$parent.highlight_word(word);
+            this.updateTabNames();
         },
 
         deleteTab () {
@@ -159,6 +176,18 @@ export default {
                     this.changeTab(0);
                 }
             });
+
+
+            if (this.$store.state.tab_list.length == 0) {                
+                this.$store.state.tab_list.push("ENTER Taxon name to start");
+                this.$store.state.text_array[0] = "";
+                this.$store.state.description_array[0] = "";
+                this.$store.state.active_tab = -1;
+                this.updateTabNames();
+            } else {
+                console.log("matricize after delete");
+                this.$parent.matricize(true);
+            }
             // this.$parent.matricize(true);
             // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
         }
