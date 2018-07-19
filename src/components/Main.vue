@@ -250,12 +250,12 @@ export default {
 
         var embedOffset = 0;
         for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
-          if( embedKey != 'undefined' && Number(embedKey) < item.pos) {
+          if( embedKey != 'undefined' && Number(embedKey) < item.pos + item.len) {
             embedOffset ++;
           }
         }
 
-        this.editor.formatText(embedOffset + item.pos, item.len, {"background-color":"yellowgreen","color":"blue"}, true);
+        this.editor.formatText(embedOffset + item.pos, item.len, 'underline', true);
       });
     },
 
@@ -269,7 +269,7 @@ export default {
             embedOffset ++;
           }
         }
-        this.editor.formatText(embedOffset + item.pos, item.len, {"background-color":"white","color":"black"}, true);
+        this.editor.formatText(embedOffset + item.pos, item.len, 'underline', false);
       });
       this.$store.state.editor_highlights = [];
     },
@@ -317,7 +317,7 @@ export default {
       let fetch_result;
       const current_tab_name = this.$store.state.tab_list[tab_index];
       this.in_progress = true;
-      this.$http.get(CONFIG.apiUrl+'parse?sentence='+encodeURI(parsecontent)).then(response => {
+      this.$http.get(CONFIG.apiUrl+'parse?description='+encodeURI(parsecontent)).then(response => {
         console.log('api response: ', response.body);
         this.in_progress = false;
         fetch_result = response.body;
@@ -459,13 +459,13 @@ export default {
 
       for(var key in this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]]) {
         var characterOntologyInfo = this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]][key];
-          //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
           if (characterOntologyInfo.hasOwnProperty('matching_value')) {
             var index = textContent.search(characterOntologyInfo.search_term);
             if ( index != -1) {
               if (characterOntologyInfo.approved == null) {
                 //if (characterOntologyInfo.matching_value == 1) {
                   this.editor.formatText(index, characterOntologyInfo.search_term.length, "color", "lightgreen");
+                  console.log(characterOntologyInfo.search_term + "-" + "lightGreen");
                 //}
               } else {
                 if (characterOntologyInfo.approved) {
@@ -475,28 +475,34 @@ export default {
                 }
               }
             }
-          } else {
+          }
+      }
+      var searchKeys = {};
+      for(var key in this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+        var characterOntologyInfo = this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]][key];
+          if (!characterOntologyInfo.hasOwnProperty('matching_value')) {
             var search_term = characterOntologyInfo.search_term.toString();
             if(isNaN(search_term) == true) {      // avoid numeric values
               var parent_term = characterOntologyInfo.matching_parent_term;
-              //console.log(characterOntologyInfo[this.$store.state.tab_list[this.$store.state.active_tab]]);
-              var index = this.editor.getText().toLowerCase().search(search_term);
-              if ( index != -1) {
+              // get all indices of search_term 
+              var startIndex = 0, index;
+              var textContentLower = this.editor.getText().toLowerCase();
+              while ((index = textContentLower.indexOf(search_term, startIndex)) > -1) {
+                startIndex = index + search_term.length;
+
                 var embedOffset = 0;
+                var isExist = 0;
                 for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
-                  if( embedKey != 'undefined' && Number(embedKey) < index) {
+                  if( embedKey != 'undefined' && this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][embedKey].text_index + this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][embedKey].search_term.length == index + search_term.length) {
+                    isExist ++;
+                  }
+                  if( embedKey != 'undefined' && Number(embedKey) <= index + search_term.length) {
                     embedOffset ++;
                   }
                 }
-                var isExist = 0;
-                for (var embedKey in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
-                  if( embedKey != 'undefined' && this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][embedKey].text_index == index) {
-                    isExist ++;
-                  }
-                }
+
                 if(isExist == 0) {
                   var pos = embedOffset + index + search_term.length;
-                  var delta = this.editor.insertEmbed(pos, 'image', '/static/quiz_mark.jpg');
                   if (!this.$store.state.embeds_data.hasOwnProperty(this.$store.state.tab_list[this.$store.state.active_tab])) {
                     this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]] = {};
                   }
@@ -504,14 +510,22 @@ export default {
                     search_term: search_term,
                     parent_term: parent_term,
                     text_index: index,
-                    delta: delta,
+                    delta: null,
                     item_key: key
                   };
                 }
                 this.editor.update();
+                searchKeys[search_term] = search_term;
               }
             }
           }
+      }
+      var offset = 0;
+      for(key in this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]]) {
+
+        var delta = this.editor.insertEmbed(this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][key].text_index + this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][key].search_term.length + offset, 'image', '/static/quiz_mark.jpg');
+        offset++;
+        this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][key].delta = delta;
       }
       this.$refs.table_view.refreshTable();
     },

@@ -141,8 +141,9 @@ export default {
 
       var preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>";
       var postHtml = "</body></html>";
-      var content = document.getElementById(element).innerHTML;
 
+      var editortag = document.getElementsByClassName('ql-editor');
+      var content = editortag[0].innerHTML;
       var html = preHtml+content+postHtml;
 
       var blob = new Blob(['\ufeff', html], {
@@ -177,7 +178,6 @@ export default {
       // backup all embeds after export doc
 
       for (var i = embedsArray.length - 1; i >= 0 ; i --) {
-        console.log(embedsArray[i]);
         this.$refs.mainComp.editor.insertEmbed(embedsArray[i], 'image', '/static/quiz_mark.jpg');
       }
 

@@ -13,7 +13,7 @@ table tr td:first-child {
      id="table_viewID"
   >
     <template slot="items" slot-scope="props">
-      <td contenteditable="true" v-for="(key) in headers_array" :key="key.value" class="text-xs-left" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])">
+      <td style="height:25px" contenteditable="true" v-for="(key) in headers_array" :key="key.value" class="text-xs-left" v-on:click="highlight_text" v-on:keyup="keyup_event(props.item[key.value])">
         <v-tooltip bottom>
           <span slot="activator">{{ props.item[key.value] }}</span>
         <span>{{ props.item[key.value] }}</span>
@@ -54,7 +54,6 @@ export default {
         });
         this.headers_array = header;
         this.item_array = this.$store.state.item_list;
-        console.log(this.item_array)
       },
 
       highlight_word(searchText) {
