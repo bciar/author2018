@@ -128,18 +128,18 @@ export default {
         },
 
         changeTab (index) {
-            //this.$parent.$refs.table_view.erase_highlight();
-            //this.$parent.erase_highlight();
+            this.$parent.$refs.table_view.erase_highlight();
+            this.$parent.erase_highlight();
             if (this.$store.state.tab_list[index] == "ENTER Taxon name to start") {
                 this.$store.state.active_tab = -1;
                 return;
             }
             const self = this;
             this.$store.state.active_tab = index;
-            this.$nextTick(() => {
-                var word = self.$parent.$refs.table_view.highlightedWord;
-                self.$parent.highlight_word(word);
-            })
+            // this.$nextTick(() => {
+            //     var word = self.$parent.$refs.table_view.highlightedWord;
+            //     self.$parent.highlight_word(word);
+            // })
             console.log(index)
             // var word = this.$parent.$refs.table_view.highlightedWord;
             // console.log(word)

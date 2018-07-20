@@ -143,7 +143,11 @@ export default {
       var postHtml = "</body></html>";
 
       var editortag = document.getElementsByClassName('ql-editor');
-      var content = editortag[0].innerHTML;
+      var content = editortag[0].innerHTML.toString();
+      console.log(content);
+      content = content.replace(/lightgreen;/g, "black;");
+      content = content.replace(/darkgreen;/g, "black;");
+      console.log(content);
       var html = preHtml+content+postHtml;
 
       var blob = new Blob(['\ufeff', html], {

@@ -27,7 +27,8 @@
             indeterminate
             v-show="in_progress"
           ></v-progress-circular>
-          <v-btn v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
+          <v-btn v-if="requestState" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
+          <v-btn v-else v-on:click="cancelRequest()" color="gray" style="text-transform:none">Cancel</v-btn>
           <v-btn v-on:click="save_data()" color="white" style="text-transform:none">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
@@ -176,7 +177,8 @@ export default {
       editor: null,
       embedData: {},
       in_progress: false,
-      nullText: ""
+      nullText: "",
+      requestState: false
     }
   },
   beforeCreate: function() {
@@ -384,8 +386,11 @@ export default {
       this.$store.state.item_ontology_info_list = {};
       this.$store.state.ontology_index_list = {};
     },
-
-    matricize (after_delete=false) {
+    cancelRequest ()
+    {
+      console.log(this.$http.lastRequest);
+    },
+     matricize (after_delete=false) {
       if (this.$store.state.active_tab==-1) {
         this.snackbar.msg = "Please select a tab!";
         if (this.$store.state.text_array.length==0)
