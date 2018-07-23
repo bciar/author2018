@@ -193,16 +193,17 @@ export default {
             if (this.$store.state.tab_list.length == 0) {                
                 this.$store.state.tab_list.push("ENTER Taxon name to start");
                 this.$store.state.text_array[0] = "";
+                this.$store.state.item_list = [];
                 this.$store.state.description_array[0] = "";
                 this.$store.state.active_tab = -1;
+                console.log(this.$store.state.item_list);
                 this.updateTabNames();
             } else {
                 console.log("matricize after delete");
                 //this.$parent.matricize(true);
+                this.$parent.matricize(true);
             }
-             this.$parent.matricize(true);
             // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
-            console.log(this.$store.state.item_list);
             this.$parent.$refs.table_view.refreshTable();
         }
 
