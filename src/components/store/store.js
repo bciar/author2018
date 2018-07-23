@@ -9,7 +9,7 @@ export const store = new Vuex.Store({
 		logged_in: null,
 		auth_id: -1,
 
-		tab_list: ["Double Click to change Name"], // (Array) tab list
+		tab_list: ["ENTER Taxon name to start"], // (Array) tab list
 
 		item_list: [], // (Array) item list for Table, e.g. [ 0 => { name: "petal color", species1: "red", species2: "blue" }, 1 => { name: "petal count", species1: "2", species2: "4" }]
 		item_index_list: {}, // (Object) list of item name, e.g. { "petal color":"petal color", "petal count":"petal count"}

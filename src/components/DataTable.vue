@@ -52,7 +52,7 @@ export default {
           this.$store.state.tab_list.forEach(val => {
               var data = {
                   text: val.toUpperCase(),
-                  value: val.toUpperCase(),
+                  value: val,
                   sortable: false,
               };
               header.push(data);
@@ -61,6 +61,7 @@ export default {
         }
         this.headers_array = header;
         this.item_array = this.$store.state.item_list;
+        console.log(this.item_array);
       },
 
       highlight_word(searchText) {
