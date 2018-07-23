@@ -127,6 +127,7 @@ export default {
                 if (oldName == "ENTER Taxon name to start") {
                     this.$store.state.active_tab = 0;
                 }
+                this.changeTab(this.current_index);
             }
             this.editDlg = false;
             this.$parent.$refs.table_view.refreshTable();
@@ -136,7 +137,8 @@ export default {
         changeTab (index) {
             this.$parent.$refs.table_view.erase_highlight();
             this.$parent.erase_highlight();
-            if (this.$store.state.tab_list[index] == "ENTER Taxon name to start") {
+            console.log(this.$store.state.tab_list[index]);
+            if (this.$store.state.tab_list[index] == "ENTER Taxon name to start" || this.$store.state.tab_list[index] == "Double Click to change Name") {
                 this.$store.state.active_tab = -1;
                 return;
             }
@@ -151,6 +153,9 @@ export default {
             // console.log(word)
             // console.log(this.$parent)
             // this.$parent.highlight_word(word);
+            if (this.$store.state.text_array[this.$store.state.active_tab] == undefined) {
+                this.$store.state.text_array[this.$store.state.active_tab] = "";
+            }
             this.updateTabNames();
         },
 
