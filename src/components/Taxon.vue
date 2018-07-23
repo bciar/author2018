@@ -95,9 +95,15 @@ export default {
                 return 0;
             }
             if (this.current_index == -1) {
-                this.$store.state.tab_list.push(this.new_name);
-                this.$store.state.text_array.push("");
-                this.$store.state.description_array.push("");
+                if (this.$store.state.tab_list.length == 1 && this.$store.state.tab_list[0] == "ENTER Taxon name to start") {
+                    this.$store.state.tab_list[0] = this.new_name;
+                }
+                else {
+                    this.$store.state.tab_list.push(this.new_name);
+                    this.$store.state.text_array.push("");
+                    this.$store.state.description_array.push("");
+
+                }
 
                 this.$parent.logActivity(1,'New Name:'+this.new_name);
 
