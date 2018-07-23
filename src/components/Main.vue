@@ -330,12 +330,6 @@ export default {
       // use before callback
       before(request) {
         self.lastRequest = request;
-        // abort previous request, if exists
-        if (this.previousRequest) {
-          this.previousRequest.abort();
-        }
-        // set previous request on Vue instance
-        this.previousRequest = request;
       }
       }).then(response => {
         console.log(this);
@@ -410,7 +404,7 @@ export default {
       this.lastRequest.abort();
       this.in_progress = false;
     },
-     matricize (after_delete=false) {
+    matricize (after_delete=false) {
       if (this.$store.state.active_tab==-1) {
         this.snackbar.msg = "Please select a tab!";
         if (this.$store.state.text_array.length==0)
