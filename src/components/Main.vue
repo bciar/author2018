@@ -323,6 +323,7 @@ export default {
 
     call_parse(parsecontent, tab_index) {
       const self = this;
+      const tabId = tab_index;
       let fetch_result;
       const current_tab_name = this.$store.state.tab_list[tab_index];
       this.in_progress = true;
@@ -332,6 +333,7 @@ export default {
         self.lastRequest = request;
       }
       }).then(response => {
+        console.log(tabId);
         console.log(this);
         console.log('api response: ', response.body);
         this.in_progress = false;
@@ -604,6 +606,7 @@ export default {
         if(snapshot.exists()) {
           self.$store.state.description_array = JSON.parse(snapshot.val().data);
           self.$refs.table_view.refreshTable();
+          self.$refs.taxon_tab.updateTabNames();
         }
       });
     },
