@@ -8,7 +8,7 @@
         <v-btn flat fab dark small color="white darken-1" v-on:click="editTab(-1)">
           <v-icon dark>add</v-icon>
         </v-btn>
-        <v-btn flat fab dark small color="white darken-1" v-on:click="deleteTab()">
+        <v-btn :disabled="$parent.isLoading" flat fab dark small color="white darken-1" v-on:click="deleteTab()">
           <v-icon dark>close</v-icon>
         </v-btn>
       </v-tabs>
@@ -200,7 +200,7 @@ export default {
                 console.log("matricize after delete");
                 //this.$parent.matricize(true);
             }
-            // this.$parent.matricize(true);
+             this.$parent.matricize(true);
             // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
             console.log(this.$store.state.item_list);
             this.$parent.$refs.table_view.refreshTable();

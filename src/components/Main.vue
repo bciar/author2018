@@ -25,9 +25,9 @@
             color="success"
             style="margin:0 30px 0 10px;"
             indeterminate
-            v-show="in_progress"
+            v-show="isLoading"
           ></v-progress-circular>          
-          <v-icon color="blue" v-if="in_progress" dark  v-on:click="cancelRequest()">close</v-icon>
+          <v-icon color="blue" v-if="isLoading" dark  v-on:click="cancelRequest()">close</v-icon>
           <v-btn v-if="in_progress" :disabled="true" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
           <v-btn v-else :disabled="false" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
           <v-btn v-on:click="save_data()" color="white" style="text-transform:none">Save</v-btn>
@@ -180,7 +180,9 @@ export default {
       in_progress: false,
       nullText: "",
       requestState: false,
-      lastRequest: null
+      lastRequest: null,
+      responseCount: 0,
+      isLoading: false
     }
   },
   beforeCreate: function() {
@@ -333,6 +335,10 @@ export default {
         self.lastRequest = request;
       }
       }).then(response => {
+        self.responseCount ++;
+        if ( self.responseCount == self.$store.state.description_array.length) {
+          self.isLoading = false;
+        }
         console.log(tabId);
         console.log(this);
         console.log('api response: ', response.body);
@@ -419,6 +425,8 @@ export default {
           this.$store.state.description_array[this.$store.state.active_tab] = this.editor.getText().replace(/(\r\n|\n|\r)/gm,"");
       console.log('matricize');
       this.store_init();
+      this.responseCount = 0;
+      this.isLoading = true;
       this.$store.state.description_array.forEach( (d, i) => {
           if (d !== '') {
               this.call_parse(d, i);
@@ -649,8 +657,8 @@ export default {
           this.searchMenu.posY = e.clientY
           this.$nextTick(() => {
             this.searchMenu.show = true
-            console.log(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term))
-            this.$http.get(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
+            console.log(CONFIG.apiUrl+'PO/search?term='+encodeURI(this.searchMenu.search_term))
+            this.$http.get(CONFIG.apiUrl+'PO/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
 
               this.logActivity(6,'Term:'+this.searchMenu.search_term, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
               console.log(response);
