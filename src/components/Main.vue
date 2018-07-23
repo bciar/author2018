@@ -26,9 +26,10 @@
             style="margin:0 30px 0 10px;"
             indeterminate
             v-show="in_progress"
-          ></v-progress-circular>
-          <v-btn v-if="requestState" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
-          <v-btn v-else v-on:click="cancelRequest()" color="gray" style="text-transform:none">Cancel</v-btn>
+          ></v-progress-circular>          
+          <v-icon color="blue" v-if="in_progress" dark  v-on:click="cancelRequest()">close</v-icon>
+          <v-btn v-if="in_progress" :disabled="true" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
+          <v-btn v-else :disabled="false" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
           <v-btn v-on:click="save_data()" color="white" style="text-transform:none">Save</v-btn>
         </v-layout>
         <v-layout xs12 fill-height>
@@ -178,7 +179,8 @@ export default {
       embedData: {},
       in_progress: false,
       nullText: "",
-      requestState: false
+      requestState: false,
+      lastRequest: null
     }
   },
   beforeCreate: function() {
@@ -198,10 +200,14 @@ export default {
 
     this.editor = this.$refs.rich_edit.quill;
     this.editor.on('selection-change', function(range, oldRange, source) {
+      console.log(range);
+      console.log(oldRange);
+      console.log(source);
+      
         var sel_node = window.getSelection();
         self.$refs.table_view.erase_highlight();
-        if (sel_node.focusNode.parentNode.nodeName == "STRONG") {
-          var highlight_str = sel_node.focusNode.nodeValue;
+        if (true) {
+          var highlight_str = self.editor.getText(range.index, range.length);//sel_node.focusNode.nodeValue;
           self.$refs.table_view.highlight_word(highlight_str);
         }
     });
@@ -316,10 +322,23 @@ export default {
     },
 
     call_parse(parsecontent, tab_index) {
+      const self = this;
       let fetch_result;
       const current_tab_name = this.$store.state.tab_list[tab_index];
       this.in_progress = true;
-      this.$http.get(CONFIG.apiUrl+'parse?description='+encodeURI(parsecontent)).then(response => {
+      this.$http.get(CONFIG.apiUrl+'parse?description='+encodeURI(parsecontent), {
+      // use before callback
+      before(request) {
+        self.lastRequest = request;
+        // abort previous request, if exists
+        if (this.previousRequest) {
+          this.previousRequest.abort();
+        }
+        // set previous request on Vue instance
+        this.previousRequest = request;
+      }
+      }).then(response => {
+        console.log(this);
         console.log('api response: ', response.body);
         this.in_progress = false;
         fetch_result = response.body;
@@ -388,7 +407,8 @@ export default {
     },
     cancelRequest ()
     {
-      console.log(this.$http.lastRequest);
+      this.lastRequest.abort();
+      this.in_progress = false;
     },
      matricize (after_delete=false) {
       if (this.$store.state.active_tab==-1) {

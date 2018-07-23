@@ -44,14 +44,21 @@ export default {
     methods: {
       refreshTable () {
         var header = [{text:"Name",value:"name",sortable:false}];
-        this.$store.state.tab_list.forEach(val => {
-            var data = {
-                text: val,
-                value: val,
-                sortable: false,
-            };
-            header.push(data);
-        });
+        if (this.$store.state.tab_list.length == 1 && (this.$store.state.tab_list[0] == "Double Click to change Name" || this.$store.state.tab_list[0] == "ENTER Taxon name to start"))
+        {
+          console.log("exception in theader");
+        }
+        else {
+          this.$store.state.tab_list.forEach(val => {
+              var data = {
+                  text: val.toUpperCase(),
+                  value: val.toUpperCase(),
+                  sortable: false,
+              };
+              header.push(data);
+          });
+
+        }
         this.headers_array = header;
         this.item_array = this.$store.state.item_list;
       },

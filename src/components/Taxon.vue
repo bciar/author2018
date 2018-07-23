@@ -150,6 +150,7 @@ export default {
 
         deleteTab () {
             const oldName = this.$store.state.tab_list[this.$store.state.active_tab];
+            console.log(this.$store.state.item_list);
             this.$store.state.item_list.forEach((item, index) => {
                 if (item.hasOwnProperty(oldName)) {
                     item[this.new_name] = item[oldName];//this.$store.state.tab_list[this.current_index];
@@ -186,10 +187,12 @@ export default {
                 this.updateTabNames();
             } else {
                 console.log("matricize after delete");
-                this.$parent.matricize(true);
+                //this.$parent.matricize(true);
             }
             // this.$parent.matricize(true);
             // this.$parent.logActivity(2,'New Name:'+this.new_name, 'Old Name:'+ oldName);
+            console.log(this.$store.state.item_list);
+            this.$parent.$refs.table_view.refreshTable();
         }
 
     }
