@@ -28,7 +28,7 @@
             v-show="isLoading"
           ></v-progress-circular>          
           <v-icon color="blue" v-if="isLoading" dark  v-on:click="cancelRequest()">close</v-icon>
-          <v-btn v-if="in_progress" :disabled="true" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
+          <v-btn v-if="isLoading" :disabled="true" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
           <v-btn v-else :disabled="false" v-on:click="matricize()" color="gray" style="text-transform:none">Matricize This</v-btn>
           <v-btn v-on:click="save_data()" color="white" style="text-transform:none">Save</v-btn>
         </v-layout>
@@ -181,6 +181,7 @@ export default {
       nullText: "",
       requestState: false,
       lastRequest: null,
+      pending_request_array: [],
       responseCount: 0,
       isLoading: false
     }
@@ -202,9 +203,9 @@ export default {
 
     this.editor = this.$refs.rich_edit.quill;
     this.editor.on('selection-change', function(range, oldRange, source) {
-      console.log(range);
-      console.log(oldRange);
-      console.log(source);
+      //console.log(range);
+      //console.log(oldRange);
+      //console.log(source);
       
         var sel_node = window.getSelection();
         self.$refs.table_view.erase_highlight();
@@ -331,17 +332,17 @@ export default {
       this.in_progress = true;
       this.$http.get(CONFIG.apiUrl+'parse?description='+encodeURI(parsecontent), {
       // use before callback
-      before(request) {
-        self.lastRequest = request;
-      }
+        before(request) {
+          self.pending_request_array.push(request);
+          self.lastRequest = request;
+          //console.log(request);
+        }
       }).then(response => {
         self.responseCount ++;
-        if ( self.responseCount == self.$store.state.description_array.length) {
+        if ( self.responseCount == self.pending_request_array.length) {
           self.isLoading = false;
         }
-        console.log(tabId);
-        console.log(this);
-        console.log('api response: ', response.body);
+        console.log(tabId + ' => api response: ', response.body);
         this.in_progress = false;
         fetch_result = response.body;
 
@@ -409,10 +410,13 @@ export default {
     },
     cancelRequest ()
     {
-      this.lastRequest.abort();
-      this.in_progress = false;
+      this.pending_request_array.forEach((request) => {
+        request.abort()
+      })
+      this.isLoading = false;
     },
     matricize (after_delete=false) {
+
       if (this.$store.state.active_tab==-1) {
         this.snackbar.msg = "Please select a tab!";
         if (this.$store.state.text_array.length==0)
@@ -420,7 +424,7 @@ export default {
         this.snackbar.show = true;
         return;
       }
-
+      this.pending_request_array = [];
       if (!after_delete)
           this.$store.state.description_array[this.$store.state.active_tab] = this.editor.getText().replace(/(\r\n|\n|\r)/gm,"");
       console.log('matricize');
@@ -453,29 +457,33 @@ export default {
       this.$store.state.embeds_data = {};
 
       // bold each items in editor
+      console.log("ontology_index_list =>");
+      console.log(this.$store.state.ontology_index_list);
       for(var key in this.$store.state.ontology_index_list) {
         var txtToBold = this.$store.state.ontology_index_list[key].nameOrigin.toLowerCase();
+        //console.log(txtToBold);
+        console.log(this.$store.state.ontology_index_list[key]);
         var index = textContent.search(txtToBold);
         if ( index != -1) {
           // bold only first word of sentence (added from issue 11)
-          var toBold = false;
-          if (index == 0) {
-            toBold = true;
-          } else {
-            var iter = index - 1;
-            while(iter > 0) {
-              if (textContent.charAt(iter) == ' ') {
-                iter --;
-              } else if(textContent.charAt(iter) == '.') {
-                toBold = true;
-                break;
-              } else {
-                break;
-              }
-            }
-          }
+          // var toBold = false;
+          // if (index == 0) {
+          //   toBold = true;
+          // } else {
+          //   var iter = index - 1;
+          //   while(iter > 0) {
+          //     if (textContent.charAt(iter) == ' ') {
+          //       iter --;
+          //     } else if(textContent.charAt(iter) == '.') {
+          //       toBold = true;
+          //       break;
+          //     } else {
+          //       break;
+          //     }
+          //   }
+          // }
 
-          if( toBold) {
+          if( true) {
             this.editor.formatText(index, txtToBold.length, "bold", true);
           }
           if (this.$store.state.ontology_index_list[key].ontology != null) {
@@ -494,7 +502,7 @@ export default {
               if (characterOntologyInfo.approved == null) {
                 //if (characterOntologyInfo.matching_value == 1) {
                   this.editor.formatText(index, characterOntologyInfo.search_term.length, "color", "lightgreen");
-                  console.log(characterOntologyInfo.search_term + "-" + "lightGreen");
+                  //console.log(characterOntologyInfo.search_term + "-" + "lightGreen");
                 //}
               } else {
                 if (characterOntologyInfo.approved) {
@@ -509,6 +517,8 @@ export default {
       var searchKeys = {};
       for(var key in this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]]) {
         var characterOntologyInfo = this.$store.state.item_ontology_info_list[this.$store.state.tab_list[this.$store.state.active_tab]][key];
+        
+              // console.log(characterOntologyInfo);
           if (!characterOntologyInfo.hasOwnProperty('matching_value')) {
             var search_term = characterOntologyInfo.search_term.toString();
             if(isNaN(search_term) == true) {      // avoid numeric values
@@ -657,14 +667,15 @@ export default {
           this.searchMenu.posY = e.clientY
           this.$nextTick(() => {
             this.searchMenu.show = true
-            console.log(CONFIG.apiUrl+'PO/search?term='+encodeURI(this.searchMenu.search_term))
-            this.$http.get(CONFIG.apiUrl+'PO/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
+            console.log(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term))
+            this.searchMenu.menuItem = [];
+            this.$http.get(CONFIG.apiUrl+'CAREX/search?term='+encodeURI(this.searchMenu.search_term)).then(response => {
 
               this.logActivity(6,'Term:'+this.searchMenu.search_term, 'Tab name:'+this.$store.state.tab_list[this.$store.state.active_tab]);
               console.log(response);
 
               this.searchMenu.searching_icon = false;
-              var result = searchJson.entries[0];
+              var result = response.body.entries[0];
               this.searchMenu.parent = result.parentTerm;
               this.searchMenu.score = result.score;
               result.resultAnnotations.forEach(val => {
@@ -674,25 +685,26 @@ export default {
             });
           });
       } else {
-        if (e.srcElement.style.color == "lightgreen") {
+        //if (e.srcElement.style.color == "lightgreen") {
           var term = e.srcElement.textContent.toLowerCase();
           console.log(term);
           this.approveMenu.dom = e.srcElement;
           if (e.srcElement.tagName == "STRONG") {
             // search info in ontology list
             console.log(this.$store.state.ontology_index_list);
-            if(this.$store.state.ontology_index_list.hasOwnProperty(term)) {
-              if (this.$store.state.ontology_index_list[term].ontology.search_term == term) {
-                var matchingInfo = this.$store.state.ontology_index_list[term].ontology;
+            for(var key in this.$store.state.ontology_index_list) {
+              if (this.$store.state.ontology_index_list[key].nameOrigin == term) {
+                var matchingInfo = this.$store.state.ontology_index_list[key].ontology;
                 this.approveMenu.menuItem = [];
                 this.approveMenu.menuItem = [
-                  {title: "Search Term:" + this.$store.state.ontology_index_list[term].ontology.search_term},
-                  {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[term].ontology.matching_parent_term},
-                  {title: "Matching Term Label:" + this.$store.state.ontology_index_list[term].ontology.matching_term_label},
-                  {title: "Matching Value:" + this.$store.state.ontology_index_list[term].ontology.matching_value}
+                  {title: "Search Term:" + this.$store.state.ontology_index_list[key].ontology.search_term},
+                  {title: "Matching Parent Term:" + this.$store.state.ontology_index_list[key].ontology.matching_parent_term},
+                  {title: "Matching Term Label:" + this.$store.state.ontology_index_list[key].ontology.matching_term_label},
+                  {title: "Matching Value:" + this.$store.state.ontology_index_list[key].ontology.matching_value}
                 ];
               }
             }
+
           }
           else {
             // search info in character list this.$store.state.item_ontology_info_list[item_string][this.$store.state.tab_list[this.$store.state.active_tab]]
@@ -718,7 +730,7 @@ export default {
           this.$nextTick(() => {
             this.approveMenu.show = true
           });
-        }
+        //}
       }
       e.preventDefault();
     },
@@ -767,9 +779,10 @@ export default {
     },
     setSearchValue (val) {
       // exchange text value
-      this.editor.deleteText(this.searchMenu.quizInfo.text_index, this.searchMenu.search_term.length + 1);      // +1 : delete embed icon
+      console.log(val);
+      this.editor.deleteText(this.searchMenu.quizInfo.text_index + 1, this.searchMenu.search_term.length );      // +1 : delete embed icon
       var deltaPos = val.length - this.searchMenu.search_term.length - 1;
-      this.editor.insertText(this.searchMenu.quizInfo.text_index, val, {'color':'lightgreen'});
+      this.editor.insertText(this.searchMenu.quizInfo.text_index + 1, val, {'color':'lightgreen'});
 
       // delete embed info
       delete this.$store.state.embeds_data[this.$store.state.tab_list[this.$store.state.active_tab]][this.searchMenu.embedIndex];

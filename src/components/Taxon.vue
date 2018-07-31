@@ -62,7 +62,6 @@ export default {
             this.tabNames = this.$store.state.tab_list;
             if (this.$store.state.active_tab != -1) 
                 this.active = this.$store.state.active_tab;
-            console.log(this.tabNames);
         },
         editTab (key) {
             if(key != -1) {
@@ -137,7 +136,6 @@ export default {
         changeTab (index) {
             this.$parent.$refs.table_view.erase_highlight();
             this.$parent.erase_highlight();
-            console.log(this.$store.state.tab_list[index]);
             if (this.$store.state.tab_list[index] == "ENTER Taxon name to start" || this.$store.state.tab_list[index] == "Double Click to change Name") {
                 this.$store.state.active_tab = -1;
                 return;
@@ -148,7 +146,6 @@ export default {
             //     var word = self.$parent.$refs.table_view.highlightedWord;
             //     self.$parent.highlight_word(word);
             // })
-            console.log(index)
             // var word = this.$parent.$refs.table_view.highlightedWord;
             // console.log(word)
             // console.log(this.$parent)
@@ -161,7 +158,6 @@ export default {
 
         deleteTab () {
             const oldName = this.$store.state.tab_list[this.$store.state.active_tab];
-            console.log(this.$store.state.item_list);
             this.$store.state.item_list.forEach((item, index) => {
                 if (item.hasOwnProperty(oldName)) {
                     item[this.new_name] = item[oldName];//this.$store.state.tab_list[this.current_index];
@@ -175,13 +171,10 @@ export default {
                 this.$store.state.embeds_data[this.new_name] = oldTabEmbeds;
             }
             var deleteIndex = 0;
-            console.log(oldName);
             this.$store.state.active_tab = 0;
             this.$store.state.tab_list.forEach( (item, index) => {
-                console.log(item);
                 if (item == oldName) {
                     //delete item;
-                    console.log(index);
                     this.$store.state.tab_list.splice(index,1);
                     this.$store.state.text_array.splice(index, 1);
                     this.$store.state.description_array.splice(index, 1);
@@ -196,10 +189,8 @@ export default {
                 this.$store.state.item_list = [];
                 this.$store.state.description_array[0] = "";
                 this.$store.state.active_tab = -1;
-                console.log(this.$store.state.item_list);
                 this.updateTabNames();
             } else {
-                console.log("matricize after delete");
                 //this.$parent.matricize(true);
                 this.$parent.matricize(true);
             }
